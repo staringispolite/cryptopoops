@@ -5,10 +5,13 @@ pragma solidity ^0.7.0;
 
 import "./token/ERC721/ERC721.sol";  // OpenZeppelin
 import "./access/Ownable.sol";  // OpenZeppelin
+import "./access/AccessControl.sol";  // OpenZeppelin
+
+import "./CryptoPoopsTraits.sol"; 
 
 // Inspired/Copied from BGANPUNKS V2 (bastardganpunks.club)
 // and the lovable Chubbies (chubbies.io)
-contract CryptoPoops is ERC721, Ownable {
+contract CryptoPoops is CryptoPoopTraits, ERC721, Ownable, AccessControl {
     using SafeMath for uint256;
     uint public constant MAX_POOPS = 10000;
     bool public hasSaleStarted = false;
@@ -21,6 +24,14 @@ contract CryptoPoops is ERC721, Ownable {
 
     constructor(string memory baseURI) ERC721("CryptoPoops","POOPS")  {
         setBaseURI(baseURI);
+    }
+    
+    // ERC 165
+    // TODO: Can we save gas by going into ERC165.sol and making this external view?
+    function supportsInterface(bytes4 interfaceID) public view override(AccessControl, ERC165) returns (bool) {
+      // Finalize the interface and implement this for real
+      return ((interfaceID != 0xffffffff) &&  // Return false for this, per spec
+              (interfaceID ^ 0x80ac58cd > 0)); // non-optional ERC-721 functions
     }
     
     function tokensOfOwner(address _owner) external view returns(uint256[] memory ) {
@@ -123,3 +134,14 @@ contract CryptoPoops is ERC721, Ownable {
         }
     }
 }
+
+// TODO: Delete this after calculating on the dev chain locally
+contract Selector {
+  // Calculate XOR of all function selectors
+  function calculateSelector() public pure returns (bytes4) {
+    CryptoPoops cp;
+    return cp.supportsInterface.selector ^ 
+      cp.balanceOf.selector ^ cp.ownerOf.selector ^ cp.approve.selector;
+  }  
+}
+
