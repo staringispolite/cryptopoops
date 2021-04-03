@@ -105,4 +105,17 @@ contract CryptoPoopTraits {
     nonce++;
     return uint8(randomOptionId);
   }
+
+  // @dev a DNA of uint256 that can store up to 8 distinct categories of max 256 options each
+  // Currently, our structure is the following:
+  // | unused byte | unused byte | front acc | faces | colors | bodies | back acc | backgrounds |
+  //
+  // TODO: pack into a uint32 w/fewer options each.
+  function encodeDNA(uint8[NUM_CATEGORIES] memory _traits) internal returns(uint256) {
+    uint256 dna = 0;
+    for (uint32 i; i < NUM_CATEGORIES; i++) {
+      uint8 dnaPart = uint8(_traits[i]);
+      dna |= (dnaPart << (8 * i));
+    }
+  }
 }
