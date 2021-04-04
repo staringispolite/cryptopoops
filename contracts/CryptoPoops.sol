@@ -13,7 +13,7 @@ import "./CryptoPoopsTraits.sol";
 // and the lovable Chubbies (chubbies.io)
 contract CryptoPoops is CryptoPoopTraits, ERC721, Ownable, AccessControl {
     using SafeMath for uint256;
-    uint public constant MAX_POOPS = 10000;
+    uint public constant MAX_POOPS = 6006;
     bool public hasSaleStarted = false;
     
     // The IPFS hash for all CryptoPoops concatenated *might* stored here once all CryptoPoops are issued and if I figure it out
