@@ -10,28 +10,17 @@ import "./access/AccessControl.sol";  // OpenZeppelin
 import "./CryptoPoopsTraits.sol"; 
 
 // Inspired/Copied from BGANPUNKS V2 (bastardganpunks.club)
-// and the lovable Chubbies (chubbies.io)
+// and the lovable justice-filled Chubbies (chubbies.io)
 contract CryptoPoops is CryptoPoopTraits, ERC721, Ownable, AccessControl {
     using SafeMath for uint256;
     uint public constant MAX_POOPS = 6006;
     bool public hasSaleStarted = false;
-    
-    // The IPFS hash for all CryptoPoops concatenated *might* stored here once all CryptoPoops are issued and if I figure it out
-    string public METADATA_PROVENANCE_HASH = "";
 
-    // Truth.　
-    string public constant R = "You can be chubby and still be cute. Cuteness is Justice.";
+    // TODO: The IPFS hash for all CryptoPoops concatenated *might* stored here once all CryptoPoops are issued and if I figure it out
+    string public METADATA_PROVENANCE_HASH = "";
 
     constructor(string memory baseURI) ERC721("CryptoPoops","POOPS")  {
         setBaseURI(baseURI);
-    }
-    
-    // ERC 165
-    // TODO: Can we save gas by going into ERC165.sol and making this external view?
-    function supportsInterface(bytes4 interfaceID) public view override(AccessControl, ERC165) returns (bool) {
-      // Finalize the interface and implement this for real
-      return ((interfaceID != 0xffffffff) &&  // Return false for this, per spec
-              (interfaceID ^ 0x80ac58cd > 0)); // non-optional ERC-721 functions
     }
     
     function tokensOfOwner(address _owner) external view returns(uint256[] memory ) {
@@ -71,7 +60,7 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, Ownable, AccessControl {
         }
     }
 
-    function calculatePriceForToken(uint _id) public view returns (uint256) {
+    function calculatePriceForToken(uint _id) public pure returns (uint256) {
         require(_id < MAX_POOPS, "Sale has already ended");
 
         if (_id >= 9900) {
@@ -99,8 +88,30 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, Ownable, AccessControl {
 
         for (uint i = 0; i < numCryptoPoops; i++) {
             uint mintIndex = totalSupply();
-            _safeMint(msg.sender, mintIndex);
+            _safeMintWithTraits(msg.sender, mintIndex, 0);
         }
+    }
+
+    // TODO: Make boost something that gets assigned (along with AccessControl?) and lives with Traits
+    // @dev Combine minting and trait generation in one place, so all CryptoPoops
+    // get assigned traits correctly.
+    function _safeMintWithTraits(address _to, uint256 _mintIndex, uint8 _boost) internal {
+      _safeMint(_to, _mintIndex);
+
+      uint8[NUM_CATEGORIES] memory assignedTraits;
+      uint8 rarityLevel;
+
+      for (uint8 i; i < NUM_CATEGORIES; i++) {
+        rarityLevel = randomLevel() + _boost;
+        if (rarityLevel >= NUM_LEVELS) {
+          rarityLevel = NUM_LEVELS - 1;
+        }
+        assignedTraits[i] = randomTrait(rarityLevel, i);
+      }
+
+      uint64 encodedTraits = encodeTraits(assignedTraits);
+      _tokenTraits[_mintIndex] = encodedTraits;
+      emit TraitAssigned(_to, _mintIndex, encodedTraits);
     }
     
     // God Mode
@@ -130,9 +141,18 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, Ownable, AccessControl {
         uint256 index;
         // Reserved for people who helped this project and giveaways
         for (index = 0; index < numCryptoPoops; index++) {
-            _safeMint(owner(), currentSupply + index);
+            _safeMintWithTraits(owner(), currentSupply + index, 0);
         }
     }
+
+    // ERC 165
+    // TODO: Can we save gas by going into ERC165.sol and making this external view?
+    function supportsInterface(bytes4 interfaceID) public pure override(AccessControl, ERC165) returns (bool) {
+      // Finalize the interface and implement this for real
+      return ((interfaceID != 0xffffffff) &&  // Return false for this, per spec
+              (interfaceID ^ 0x80ac58cd > 0)); // non-optional ERC-721 functions
+    }
+
 }
 
 // TODO: Delete this after calculating on the dev chain locally
@@ -144,4 +164,3 @@ contract Selector {
       cp.balanceOf.selector ^ cp.ownerOf.selector ^ cp.approve.selector;
   }  
 }
-
