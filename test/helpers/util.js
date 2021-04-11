@@ -1,6 +1,3 @@
-var chai = require('chai');
-var expect = chai.expect;
-
 async function shouldThrow(promise) {
   try {
     await promise;
