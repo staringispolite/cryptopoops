@@ -28,8 +28,8 @@ contract("CryptoPoopTraits", async (accounts) => {
 
   it("should not allow regular users to set level probabilities", async () => {
     const instance = await cryptoPoopTraits.new();
-    utils.shouldThrow(instance.setLevelProbabilities(
-      [40, 60, 80, 95, 100], {from: alice}));
+    await expectRevert(instance.setLevelProbabilities([40, 60, 80, 95, 100], {from: alice}),
+      "Ownable: caller is not the owner -- Reason given: Ownable: caller is not the owner.");
   });
 
   it("should allow owner to set category options", async () => {
@@ -67,8 +67,8 @@ contract("CryptoPoopTraits", async (accounts) => {
   it("should not allow regular users to set category options", async () => {
     const instance = await cryptoPoopTraits.new();
 
-    utils.shouldThrow(instance.setCategoryOptions(
-      [0], [0], [0], [0], [0], 0, {from: alice}));
+    await expectRevert(instance.setCategoryOptions([0], [0], [0], [0], [0], 0, {from: alice}),
+      "Ownable: caller is not the owner -- Reason given: Ownable: caller is not the owner.");
   });
 
 });
