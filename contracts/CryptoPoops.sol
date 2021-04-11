@@ -101,7 +101,7 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl {
     uint8[NUM_CATEGORIES] memory assignedTraits;
     uint8 rarityLevel;
 
-    for (uint8 i; i < NUM_CATEGORIES; i++) {
+    for (uint8 i = 0; i < NUM_CATEGORIES; i++) {
       rarityLevel = randomLevel() + _boost;
       if (rarityLevel >= NUM_LEVELS) {
         rarityLevel = NUM_LEVELS - 1;
@@ -141,8 +141,7 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl {
     uint256 index;
     // Reserved for people who helped this project and giveaways
     for (index = 0; index < numCryptoPoops; index++) {
-      // TODO: these will be 1 of 1's. Remove traits
-      _safeMintWithTraits(owner(), currentSupply + index, 0);
+      _safeMint(owner(), currentSupply + index);
     }
   }
 
