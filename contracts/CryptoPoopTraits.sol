@@ -63,9 +63,9 @@ contract CryptoPoopTraits is Ownable {
     uint highestLevel = COMMON;
     uint randomNumber = uint(keccak256(abi.encodePacked(
       block.timestamp, msg.sender, block.number, traitNonce))) % 100;
-    uint8 i = 0;
-    while ((i < NUM_LEVELS) && (randomNumber >= levelProbabilities[i])) {
-      highestLevel = ++i;
+    while ((highestLevel < NUM_LEVELS) &&
+           (randomNumber >= levelProbabilities[highestLevel])) {
+      highestLevel++;
     }
     traitNonce++;
     return uint8(highestLevel);
