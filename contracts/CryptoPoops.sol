@@ -7,11 +7,11 @@ import "./token/ERC721/ERC721.sol";  // OpenZeppelin
 import "./access/Ownable.sol";  // OpenZeppelin
 import "./access/AccessControl.sol";  // OpenZeppelin
 
-import "./CryptoPoopsTraits.sol"; 
+import "./CryptoPoopTraits.sol"; 
 
 // Inspired/Copied from BGANPUNKS V2 (bastardganpunks.club)
 // and the lovable justice-filled Chubbies (chubbies.io)
-contract CryptoPoops is CryptoPoopTraits, ERC721, Ownable, AccessControl {
+contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl {
     using SafeMath for uint256;
     uint public constant MAX_POOPS = 6006;
     bool public hasSaleStarted = false;

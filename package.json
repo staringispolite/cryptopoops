@@ -19,6 +19,9 @@
   "homepage": "https://github.com/staringispolite/cryptopoops#readme",
   "dependencies": {
     "@0x/subproviders": "^2.1.4",
+    "@openzeppelin/test-helpers": "^0.5.10",
+    "bn-chai": "^1.0.1",
+    "chai": "^4.3.4",
     "eth-gas-reporter": "^0.2.17",
     "multi-token-standard": "^0.8.13",
     "opensea-js": "^1.1.5",

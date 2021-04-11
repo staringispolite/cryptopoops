@@ -4,8 +4,9 @@
 pragma solidity ^0.7.0;
 
 import "./math/SafeMath.sol";
+import "./access/Ownable.sol";  // OpenZeppelin
 
-contract CryptoPoopTraits {
+contract CryptoPoopTraits is Ownable {
   using SafeMath for uint256;
   using SafeMath for uint8;
 
@@ -13,8 +14,10 @@ contract CryptoPoopTraits {
   uint8 internal constant COMMON = 0;
   uint8 internal constant UNCOMMON = 1;
   uint8 internal constant RARE = 2;
-  uint8 internal constant LEGENDARY = 3;
-  uint8 internal constant NUM_LEVELS = 4;
+  uint8 internal constant EPIC = 3;
+  uint8 internal constant LEGENDARY = 4;
+  uint8 internal constant NUM_LEVELS = 5;
+  uint8[] internal levelProbabilities;
 
   // Categories within which we'll randomly assign
   uint8 internal constant BACKGROUNDS = 0;
@@ -42,28 +45,11 @@ contract CryptoPoopTraits {
   event TraitAssigned(address indexed tokenOwner, uint256 tokenId, uint64 encodedTraits);
 
   constructor() {
-    // Initialize lookup data
-    backgroundOptions[COMMON] = [uint8(0), 2, 3, 9];
-    backgroundOptions[UNCOMMON] = [uint8(1), 4, 10];
-    backgroundOptions[RARE] = [uint8(5), 8];
-    backgroundOptions[LEGENDARY] = [uint8(6), 7];
-    backAccessoryOptions[COMMON] = [uint8(0), 2, 3, 9];
-    backAccessoryOptions[UNCOMMON] = [uint8(1), 4, 10];
-    backAccessoryOptions[RARE] = [uint8(5), 8];
-    backAccessoryOptions[LEGENDARY] = [uint8(6), 7];
-    bodyOptions[COMMON] = [uint8(0), 2, 3, 9];
-    bodyOptions[UNCOMMON] = [uint8(1), 4, 10];
-    bodyOptions[RARE] = [uint8(5), 8];
-    bodyOptions[LEGENDARY] = [uint8(6), 7];
-    faceOptions[COMMON] = [uint8(0), 2, 3, 9];
-    faceOptions[UNCOMMON] = [uint8(1), 4, 10];
-    faceOptions[RARE] = [uint8(5), 8];
-    faceOptions[LEGENDARY] = [uint8(6), 7];
-    frontAccessoryOptions[COMMON] = [uint8(0), 2, 3, 9];
-    frontAccessoryOptions[UNCOMMON] = [uint8(1), 4, 10];
-    frontAccessoryOptions[RARE] = [uint8(5), 8];
-    frontAccessoryOptions[LEGENDARY] = [uint8(6), 7];
+    // Initialize number boundaries for each level, on a 100-sided die:
+    // 50% chance of common, 25% uncommon, 15% rare, 9% epic, 1% legendary  
+    levelProbabilities = [50, 75, 90, 99, 100]; 
 
+    // Initialize lookup data
     traitLookup = [
       backgroundOptions,
       backAccessoryOptions,
@@ -74,10 +60,15 @@ contract CryptoPoopTraits {
   }
 
   function randomLevel() internal returns(uint8) {
+    uint highestLevel = COMMON;
     uint randomNumber = uint(keccak256(abi.encodePacked(
-      block.timestamp, msg.sender, block.number, traitNonce))) % NUM_LEVELS;
+      block.timestamp, msg.sender, block.number, traitNonce))) % 100;
+    uint8 i = 0;
+    while ((i < NUM_LEVELS) && (randomNumber >= levelProbabilities[i])) {
+      highestLevel = ++i;
+    }
     traitNonce++;
-    return uint8(randomNumber);
+    return uint8(highestLevel);
   }
 
   // traitLookup[_category][_level] contains an array of IDs for this level and category
@@ -103,5 +94,37 @@ contract CryptoPoopTraits {
       encodedTraits |= (chunk << (8 * i));
     }
     return encodedTraits;
+  }
+
+  function setLevelProbabilities(uint8[] calldata _levelProbabilities) external onlyOwner {
+    require(_levelProbabilities.length == NUM_LEVELS,
+      "array length doesn't match number of levels");
+    levelProbabilities = _levelProbabilities;
+  }
+
+  function setCategoryOptions(uint8[] calldata _commonOptions, uint8[] calldata _uncommonOptions,
+      uint8[] calldata _rareOptions, uint8[] calldata _epicOptions, uint8[] calldata _legendaryOptions,
+      uint8 _categoryNumber) external onlyOwner {
+    require(_categoryNumber < NUM_CATEGORIES, "category doesn't exist");
+
+    traitLookup[_categoryNumber][COMMON] = _commonOptions;
+    traitLookup[_categoryNumber][UNCOMMON] = _uncommonOptions;
+    traitLookup[_categoryNumber][RARE] = _rareOptions;
+    traitLookup[_categoryNumber][EPIC] = _epicOptions;
+    traitLookup[_categoryNumber][LEGENDARY] = _legendaryOptions;
+  }
+
+  function getCategoryOptions(uint8 _categoryNumber, uint8 _rarityLevel) external view returns(uint8[] memory) {
+    require(_categoryNumber < NUM_CATEGORIES, "Category number doesn't exist");
+    require(_rarityLevel < NUM_LEVELS, "Rarity level doesn't exist");
+
+    uint numOptions = traitLookup[_categoryNumber][_rarityLevel].length;
+    uint8[] memory options = new uint8[](numOptions);
+
+    for (uint i; i < numOptions; i++) {
+      options[i] = traitLookup[_categoryNumber][_rarityLevel][i];
+    }
+
+    return options;
   }
 }
