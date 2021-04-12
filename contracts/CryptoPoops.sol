@@ -18,6 +18,7 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl, ReentrancyGuard
   using SafeMath for uint256;
   uint public constant MAX_POOPS = 6006;
   bool public hasSaleStarted = false;
+  uint internal nextTokenId = 0;
 
   // TODO: The IPFS hash for all CryptoPoops concatenated *might* stored here once all CryptoPoops are issued and if I figure it out
   string public METADATA_PROVENANCE_HASH = "";
@@ -43,7 +44,8 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl, ReentrancyGuard
 
   function calculatePrice() public view returns (uint256) {
     require(hasSaleStarted == true, "Sale hasn't started");
-    require(totalSupply() < MAX_POOPS, "Sale has already ended");
+    require(totalSupply() < MAX_POOPS,
+            "We are at max supply. Burn some in a paper bag...?");
 
     uint currentSupply = totalSupply();
     if (currentSupply >= 9900) {
@@ -63,8 +65,9 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl, ReentrancyGuard
     }
   }
 
-  function calculatePriceForToken(uint _id) public pure returns (uint256) {
-    require(_id < MAX_POOPS, "Sale has already ended");
+  function calculatePriceForToken(uint _id) external view returns (uint256) {
+    require(totalSupply() < MAX_POOPS,
+            "We are at max supply. Burn some in a paper bag...?");
 
     if (_id >= 9900) {
       return 1000000000000000000;        // 9900-10000: 1.00 ETH
@@ -84,22 +87,22 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl, ReentrancyGuard
   }
 
   function dropPoops(uint256 numCryptoPoops) external payable nonReentrant {
-    require(totalSupply() < MAX_POOPS, "Sale has already ended");
+    require(totalSupply() < MAX_POOPS,
+           "We are at max supply. Burn some in a paper bag...?");
     require(numCryptoPoops > 0 && numCryptoPoops <= 20, "You can drop minimum 1, maximum 20 CryptoPoops");
     require(totalSupply().add(numCryptoPoops) <= MAX_POOPS, "Exceeds MAX_POOPS");
     require(msg.value >= calculatePrice().mul(numCryptoPoops), "Ether value sent is below the price");
 
     for (uint i = 0; i < numCryptoPoops; i++) {
-      uint mintIndex = totalSupply();
-      _safeMintWithTraits(msg.sender, mintIndex, 0);
+      uint mintId = nextTokenId++;
+      _safeMintWithTraits(msg.sender, mintId, 0);
     }
   }
 
-  // TODO: Make boost something that gets assigned (along with AccessControl?) and lives with Traits
   // @dev Combine minting and trait generation in one place, so all CryptoPoops
   // get assigned traits correctly.
-  function _safeMintWithTraits(address _to, uint256 _mintIndex, uint8 _boost) internal {
-    _safeMint(_to, _mintIndex);
+  function _safeMintWithTraits(address _to, uint256 _mintId, uint8 _boost) internal {
+    _safeMint(_to, _mintId);
 
     uint8[NUM_CATEGORIES] memory assignedTraits;
     uint8 rarityLevel;
@@ -113,8 +116,8 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl, ReentrancyGuard
     }
 
     uint64 encodedTraits = encodeTraits(assignedTraits);
-    _tokenTraits[_mintIndex] = encodedTraits;
-    emit TraitAssigned(_to, _mintIndex, encodedTraits);
+    _tokenTraits[_mintId] = encodedTraits;
+    emit TraitAssigned(_to, _mintId, encodedTraits);
   }
 
   // God Mode

@@ -100,14 +100,14 @@ contract CryptoPoopTraits is Ownable {
 
   function setLevelProbabilities(uint8[] calldata _levelProbabilities) external onlyOwner {
     require(_levelProbabilities.length == NUM_LEVELS,
-      "array length doesn't match number of levels");
+            "Array length doesn't match number of levels");
     levelProbabilities = _levelProbabilities;
   }
 
   function setCategoryOptions(uint8[] calldata _commonOptions, uint8[] calldata _uncommonOptions,
       uint8[] calldata _rareOptions, uint8[] calldata _epicOptions, uint8[] calldata _legendaryOptions,
       uint8 _categoryNumber) external onlyOwner {
-    require(_categoryNumber < NUM_CATEGORIES, "category doesn't exist");
+    require(_categoryNumber < NUM_CATEGORIES, "Category doesn't exist");
 
     traitLookup[_categoryNumber][COMMON] = _commonOptions;
     traitLookup[_categoryNumber][UNCOMMON] = _uncommonOptions;
