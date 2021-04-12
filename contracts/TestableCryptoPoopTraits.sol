@@ -16,4 +16,8 @@ contract TestableCryptoPoopTraits is CryptoPoopTraits {
   function _test_randomTrait(uint8 _level, uint8 _category) public returns(uint8) {
     return randomTrait(_level, _category);
   }
+
+  function _test_encodeTraits(uint8[NUM_CATEGORIES] memory _traits) public pure returns(uint64) {
+    return encodeTraits(_traits);
+  }
 }

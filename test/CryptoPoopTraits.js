@@ -36,7 +36,7 @@ contract("CryptoPoopTraits", async (accounts) => {
     const instance = await cryptoPoopTraits.new();
 
     let backgrounds = 0;
-    let lookupArray = utils.setUpCategories();
+    let lookupArray = utils.setUpCategories(1);
     const result = await instance.setCategoryOptions(
       lookupArray[0], lookupArray[1], lookupArray[2], lookupArray[3], lookupArray[4],
       backgrounds, {from: owner});
@@ -44,23 +44,23 @@ contract("CryptoPoopTraits", async (accounts) => {
 
     // Check that the data were persisted
     const newCommonOptions = await instance.getCategoryOptions(0, 0, {from: alice});
-    let expectedArray = ["0", "10", "20"];
+    let expectedArray = ["1", "2", "3"];
     assert.deepEqual(newCommonOptions.map(x => x.toString()), expectedArray);
 
     const newUncommonOptions = await instance.getCategoryOptions(0, 1, {from: alice});
-    expectedArray = ["1", "11", "21"];
+    expectedArray = ["4", "5", "6"];
     assert.deepEqual(newUncommonOptions.map(x => x.toString()), expectedArray);
 
     const newRareOptions = await instance.getCategoryOptions(0, 2, {from: alice});
-    expectedArray = ["2", "12", "22"];
+    expectedArray = ["7", "8", "9"];
     assert.deepEqual(newRareOptions.map(x => x.toString()), expectedArray);
 
     const newEpicOptions = await instance.getCategoryOptions(0, 3, {from: alice});
-    expectedArray = ["3", "13", "23"];
+    expectedArray = ["10", "11", "12"];
     assert.deepEqual(newEpicOptions.map(x => x.toString()), expectedArray);
 
     const newLegendaryOptions = await instance.getCategoryOptions(0, 4, {from: alice});
-    expectedArray = ["4", "14", "24"];
+    expectedArray = ["13", "14", "15"];
     assert.deepEqual(newLegendaryOptions.map(x => x.toString()), expectedArray);
   });
 

@@ -9,12 +9,12 @@ async function shouldThrow(promise) {
   assert(false, "The contract did not throw.");
 }
 
-function setUpCategories() {
-  let commonOptions = [0, 10, 20];
-  let uncommonOptions = [1, 11, 21];
-  let rareOptions = [2, 12, 22];
-  let epicOptions = [3, 13, 23];
-  let legendaryOptions = [4, 14, 24];
+function setUpCategories(startId) {
+  let commonOptions = [startId++, startId++, startId++];
+  let uncommonOptions = [startId++, startId++, startId++];
+  let rareOptions = [startId++, startId++, startId++];
+  let epicOptions = [startId++, startId++, startId++];
+  let legendaryOptions = [startId++, startId++, startId++];
 
   let lookupArray = [
     commonOptions, uncommonOptions, rareOptions, epicOptions, legendaryOptions
@@ -23,8 +23,19 @@ function setUpCategories() {
   return lookupArray;
 }
 
+async function setUpSale(instance, ownerAccount) {
+  const numCategories = 5;
+  for (let i = 0; i < numCategories; i++) {
+    let lookupArray = setUpCategories(i*3);
+    await instance.setCategoryOptions(
+      lookupArray[0], lookupArray[1], lookupArray[2], lookupArray[3], lookupArray[4],
+      i, {from: ownerAccount});
+  }
+}
+
 module.exports = {
   shouldThrow,
-  setUpCategories
+  setUpCategories,
+  setUpSale
 };
 

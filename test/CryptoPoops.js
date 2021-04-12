@@ -15,16 +15,6 @@ const utils = require('./helpers/util');
 contract("CryptoPoops", async (accounts) => {
   let [owner, alice, bob] = accounts;
 
-  async function setUpSale(instance) {
-    const numCategories = 5;
-    for (let i = 0; i < numCategories; i++) {
-      let lookupArray = utils.setUpCategories();
-      await instance.setCategoryOptions(
-        lookupArray[0], lookupArray[1], lookupArray[2], lookupArray[3], lookupArray[4],
-        i, {from: owner});
-    }
-  }
-
   it("should not allow users to buy before sale", async () => {
     const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
     await expectRevert(instance.dropPoops(1, {from: bob}), 
@@ -71,7 +61,7 @@ contract("CryptoPoops", async (accounts) => {
 
   it("should allow users to buy after sale starts", async () => {
     const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
-    await setUpSale(instance); 
+    await utils.setUpSale(instance, owner);
 
     const startSaleResult = await instance.startSale({from: owner});
     expect(startSaleResult.receipt.status).to.equal(true);
@@ -85,7 +75,7 @@ contract("CryptoPoops", async (accounts) => {
 
   it("should not allow users to buy more than 20", async () => {
     const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
-    await setUpSale(instance); 
+    await utils.setUpSale(instance, owner);
 
     const startSaleResult = await instance.startSale({from: owner});
     expect(startSaleResult.receipt.status).to.equal(true);

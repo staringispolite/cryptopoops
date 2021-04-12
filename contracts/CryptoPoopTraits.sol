@@ -7,8 +7,11 @@ import "./math/SafeMath.sol";
 import "./access/Ownable.sol";  // OpenZeppelin
 
 contract CryptoPoopTraits is Ownable {
-  using SafeMath for uint256;
+  using SafeMath for uint;
   using SafeMath for uint8;
+  using SafeMath for uint32;
+  using SafeMath for uint64;
+  using SafeMath for uint256;
 
   // Levels of rarity
   uint8 internal constant COMMON = 0;
@@ -89,9 +92,8 @@ contract CryptoPoopTraits is Ownable {
   // | unused byte | unused byte | unused byte | front acc | faces | bodies | back acc | backgrounds |
   function encodeTraits(uint8[NUM_CATEGORIES] memory _traits) internal pure returns(uint64) {
     uint64 encodedTraits= 0;
-    for (uint32 i; i < NUM_CATEGORIES; i++) {
-      uint64 chunk = uint64(_traits[i]);
-      encodedTraits |= (chunk << (8 * i));
+    for (uint8 i; i < NUM_CATEGORIES; i++) {
+      encodedTraits |= (uint64(_traits[i]) << (8 * i));
     }
     return encodedTraits;
   }
