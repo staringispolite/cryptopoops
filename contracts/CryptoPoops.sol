@@ -12,6 +12,7 @@ import "./CryptoPoopTraits.sol";
 // Inspired/Copied from BGANPUNKS V2 (bastardganpunks.club)
 // and the lovable justice-filled Chubbies (chubbies.io)
 contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl {
+  using SafeMath for uint8;
   using SafeMath for uint256;
   uint public constant MAX_POOPS = 6006;
   bool public hasSaleStarted = false;

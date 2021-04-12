@@ -4,7 +4,7 @@ pragma solidity >=0.4.22 <0.9.0;
 import './CryptoPoopTraits.sol';
 
 // Simply exists to expose the internal functions for testing.
-contract TestCryptoPoopTraits is CryptoPoopTraits {
+contract TestableCryptoPoopTraits is CryptoPoopTraits {
   constructor() public {
     
   }

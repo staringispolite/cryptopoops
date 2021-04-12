@@ -8,10 +8,10 @@ const {
   expectRevert, // Assertions for transactions that should fail
 } = require('@openzeppelin/test-helpers');
 
-const testCryptoPoopTraits = artifacts.require('TestCryptoPoopTraits');
+const testCryptoPoopTraits = artifacts.require('TestableCryptoPoopTraits');
 const utils = require('./helpers/util');
 
-contract("TestCryptoPoopTraits", async (accounts) => {
+contract("TestableCryptoPoopTraits", async (accounts) => {
   let [owner, alice, bob] = accounts;
 
   it("should initialize correctly", async () => {
