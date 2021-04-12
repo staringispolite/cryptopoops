@@ -70,7 +70,9 @@ contract("CryptoPoops", async (accounts) => {
     expect(buyResult.receipt.status).to.equal(true);
     const numPoops = await instance.totalSupply({from: bob});
     expect(numPoops.toNumber()).to.equal(1);
-    expectEvent(buyResult, "TraitAssigned", { tokenOwner: bob, tokenId: new BN(0) });
+    const encodedTraits = await instance.traitsOf(0);
+    expectEvent(buyResult, "TraitAssigned", {
+      tokenOwner: bob, tokenId: new BN(0), encodedTraits: encodedTraits });
   });
 
   it("should not allow users to buy more than 20", async () => {

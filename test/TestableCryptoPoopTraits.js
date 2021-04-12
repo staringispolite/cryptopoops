@@ -68,17 +68,10 @@ contract("TestableCryptoPoopTraits", async (accounts) => {
     // Set up traits for all categories
     let chosenOptions = [2, 3, 4, 5, 6];
     const encodedTraits = await instance._test_encodeTraits(chosenOptions);
+    const correctEncoding = utils.encodeTraits(chosenOptions);
 
-    // Encoding would make it |0|0|0|6|5|4|3|2| with each || being 8 bits
-    // Javascript only does up to 64bit integers, so may have to do string comparison
-    correctEncoding = new BN(0);
-    for (let i = 0; i < chosenOptions.length; i++) {
-      let multFactor = new BN(2 ** (8*i));
-      let chosenTrait = new BN(chosenOptions[i]);
-      let encodedTrait = new BN(chosenTrait.mul(multFactor));
-      correctEncoding = correctEncoding.add(encodedTrait);
-    }
     expect(encodedTraits.toString()).to.equal(correctEncoding.toString());
+    expectEvent(buyResult, "TraitAssigned", { tokenOwner: bob, tokenId: new BN(0) });
   });
 
 });

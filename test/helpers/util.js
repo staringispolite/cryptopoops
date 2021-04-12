@@ -1,3 +1,10 @@
+const {
+  BN,           // Big Number support
+  constants,    // Common constants, like the zero address and largest integers
+  expectEvent,  // Assertions for emitted events
+  expectRevert, // Assertions for transactions that should fail
+} = require('@openzeppelin/test-helpers');
+
 async function shouldThrow(promise) {
   try {
     await promise;
@@ -31,6 +38,19 @@ async function setUpSale(instance, ownerAccount) {
       lookupArray[0], lookupArray[1], lookupArray[2], lookupArray[3], lookupArray[4],
       i, {from: ownerAccount});
   }
+}
+
+// Encoding would make it |0|0|0|6|5|4|3|2| with each || being 8 bits
+// Javascript can't handle 64bit integers, so we use BN
+function encodeTraits(chosenOptions) {
+  correctEncoding = new BN(0);
+  for (let i = 0; i < chosenOptions.length; i++) {
+    let multFactor = new BN(2 ** (8*i));
+    let chosenTrait = new BN(chosenOptions[i]);
+    let encodedTrait = new BN(chosenTrait.mul(multFactor));
+    correctEncoding = correctEncoding.add(encodedTrait);
+  }
+  return correctEncoding;
 }
 
 module.exports = {

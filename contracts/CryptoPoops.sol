@@ -120,6 +120,11 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl, ReentrancyGuard
     emit TraitAssigned(_to, _mintId, encodedTraits);
   }
 
+  function traitsOf(uint256 tokenId) external view returns (uint64) {
+    require(_exists(tokenId), "Traits query for nonexistent token");
+    return _tokenTraits[tokenId];
+  }
+
   // God Mode
   function setProvenanceHash(string memory _hash) public onlyOwner {
     METADATA_PROVENANCE_HASH = _hash;
