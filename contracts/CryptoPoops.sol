@@ -3,15 +3,17 @@
 
 pragma solidity ^0.7.0;
 
-import "./token/ERC721/ERC721.sol";  // OpenZeppelin
-import "./access/Ownable.sol";  // OpenZeppelin
-import "./access/AccessControl.sol";  // OpenZeppelin
+// OpenZeppelin
+import "./token/ERC721/ERC721.sol";
+import "./access/Ownable.sol";
+import "./access/AccessControl.sol";
+import "./security/ReentrancyGuard.sol";
 
 import "./CryptoPoopTraits.sol"; 
 
 // Inspired/Copied from BGANPUNKS V2 (bastardganpunks.club)
 // and the lovable justice-filled Chubbies (chubbies.io)
-contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl {
+contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl, ReentrancyGuard {
   using SafeMath for uint8;
   using SafeMath for uint256;
   uint public constant MAX_POOPS = 6006;
@@ -81,7 +83,7 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl {
     }
   }
 
-  function dropPoops(uint256 numCryptoPoops) public payable {
+  function dropPoops(uint256 numCryptoPoops) external payable nonReentrant {
     require(totalSupply() < MAX_POOPS, "Sale has already ended");
     require(numCryptoPoops > 0 && numCryptoPoops <= 20, "You can drop minimum 1, maximum 20 CryptoPoops");
     require(totalSupply().add(numCryptoPoops) <= MAX_POOPS, "Exceeds MAX_POOPS");
