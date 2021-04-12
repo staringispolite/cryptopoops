@@ -70,7 +70,7 @@ contract("CryptoPoops", async (accounts) => {
     expect(buyResult.receipt.status).to.equal(true);
     const numPoops = await instance.totalSupply({from: bob});
     expect(numPoops.toNumber()).to.equal(1);
-    // TODO make sure Bob is the owner of that NFT.
+    expectEvent(buyResult, "TraitAssigned", { tokenOwner: bob, tokenId: new BN(0) });
   });
 
   it("should not allow users to buy more than 20", async () => {
