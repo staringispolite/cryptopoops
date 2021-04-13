@@ -3,10 +3,12 @@
 
 pragma solidity ^0.7.0;
 
+// OpenZeppelin
+import "./token/ERC721/ERC721.sol";
 import "./math/SafeMath.sol";
-import "./access/Ownable.sol";  // OpenZeppelin
+import "./access/Ownable.sol";
 
-contract CryptoPoopTraits is Ownable {
+contract CryptoPoopTraits is ERC721, Ownable {
   using SafeMath for uint;
   using SafeMath for uint8;
   using SafeMath for uint32;
@@ -40,14 +42,12 @@ contract CryptoPoopTraits is Ownable {
   // traitLookup[category][level][i] = an optionId
   uint8[][NUM_LEVELS][NUM_CATEGORIES] internal traitLookup;
 
-  uint internal traitNonce = 0;
-
   // Mapping from token ID to encoded trait
   mapping (uint256 => uint64) internal _tokenTraits;
 
   event TraitAssigned(address indexed tokenOwner, uint256 tokenId, uint64 encodedTraits);
 
-  constructor() {
+  constructor() ERC721("CryptoPoops","POOPS") {
     // Initialize number boundaries for each level, on a 100-sided die:
     // 50% chance of common, 25% uncommon, 15% rare, 9% epic, 1% legendary  
     levelProbabilities = [50, 75, 90, 99, 100]; 

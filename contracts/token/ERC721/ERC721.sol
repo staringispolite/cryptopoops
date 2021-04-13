@@ -53,6 +53,9 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
     // Base URI
     string private _baseURI;
 
+    // Nonce for RNG in child contracts
+    uint internal traitNonce = 0;
+
     /*
      *     bytes4(keccak256('balanceOf(address)')) == 0x70a08231
      *     bytes4(keccak256('ownerOf(uint256)')) == 0x6352211e
@@ -193,6 +196,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
             "ERC721: approve caller is not owner nor approved for all"
         );
 
+        traitNonce++;
         _approve(to, tokenId);
     }
 
@@ -211,6 +215,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
     function setApprovalForAll(address operator, bool approved) public virtual override {
         require(operator != _msgSender(), "ERC721: approve to caller");
 
+        traitNonce++;
         _operatorApprovals[_msgSender()][operator] = approved;
         emit ApprovalForAll(_msgSender(), operator, approved);
     }
@@ -229,6 +234,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
         //solhint-disable-next-line max-line-length
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: transfer caller is not owner nor approved");
 
+        traitNonce++;
         _transfer(from, to, tokenId);
     }
 
@@ -236,6 +242,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
      * @dev See {IERC721-safeTransferFrom}.
      */
     function safeTransferFrom(address from, address to, uint256 tokenId) public virtual override {
+        traitNonce++;
         safeTransferFrom(from, to, tokenId, "");
     }
 
@@ -244,6 +251,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
      */
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public virtual override {
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: transfer caller is not owner nor approved");
+        traitNonce++;
         _safeTransfer(from, to, tokenId, _data);
     }
 
@@ -370,6 +378,8 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
 
         _tokenOwners.remove(tokenId);
 
+        traitNonce++;
+
         emit Transfer(owner, address(0), tokenId);
     }
 
@@ -398,6 +408,8 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
 
         _tokenOwners.set(tokenId, to);
 
+        traitNonce++;
+
         emit Transfer(from, to, tokenId);
     }
 
@@ -411,6 +423,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
     function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal virtual {
         require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
+        traitNonce++;
     }
 
     /**
@@ -420,6 +433,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
      */
     function _setBaseURI(string memory baseURI_) internal virtual {
         _baseURI = baseURI_;
+        traitNonce++;
     }
 
     /**

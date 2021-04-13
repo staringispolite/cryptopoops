@@ -4,7 +4,6 @@
 pragma solidity ^0.7.0;
 
 // OpenZeppelin
-import "./token/ERC721/ERC721.sol";
 import "./access/Ownable.sol";
 import "./access/AccessControl.sol";
 import "./security/ReentrancyGuard.sol";
@@ -13,7 +12,7 @@ import "./CryptoPoopTraits.sol";
 
 // Inspired/Copied from BGANPUNKS V2 (bastardganpunks.club)
 // and the lovable justice-filled Chubbies (chubbies.io)
-contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl, ReentrancyGuard {
+contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
   using SafeMath for uint8;
   using SafeMath for uint256;
 
@@ -26,7 +25,7 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl, ReentrancyGuard
   // TODO: The IPFS hash for all CryptoPoops concatenated *might* stored here once all CryptoPoops are issued and if I figure it out
   string public METADATA_PROVENANCE_HASH = "";
 
-  constructor(string memory baseURI) ERC721("CryptoPoops","POOPS")  {
+  constructor(string memory baseURI) {
     setBaseURI(baseURI);
   }
 
