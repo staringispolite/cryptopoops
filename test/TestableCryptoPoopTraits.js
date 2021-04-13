@@ -62,16 +62,4 @@ contract("TestableCryptoPoopTraits", async (accounts) => {
     console.log(results);
   });
 
-  it("should encode each category properly", async () => {
-    const instance = await testCryptoPoopTraits.new();
-
-    // Set up traits for all categories
-    let chosenOptions = [2, 3, 4, 5, 6];
-    const encodedTraits = await instance._test_encodeTraits(chosenOptions);
-    const correctEncoding = utils.encodeTraits(chosenOptions);
-
-    expect(encodedTraits.toString()).to.equal(correctEncoding.toString());
-    expectEvent(buyResult, "TraitAssigned", { tokenOwner: bob, tokenId: new BN(0) });
-  });
-
 });

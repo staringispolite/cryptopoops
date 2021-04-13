@@ -86,4 +86,57 @@ contract("CryptoPoops", async (accounts) => {
       "You can drop minimum 1, maximum 20 CryptoPoops -- Reason given: You can drop minimum 1, maximum 20 CryptoPoops."
     );
   });
+
+  it("should require the proper amount for a reroll", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+    await utils.setUpSale(instance, owner);
+
+    const startSaleResult = await instance.startSale({from: owner});
+    const buyResult = await instance.dropPoops(1,
+      {from: bob, value: web3.utils.toWei("0.02", "ether")});
+    expect(buyResult.receipt.status).to.equal(true);
+    await expectRevert(instance.reRollTraits(1, 0,
+      {from: bob, value: web3.utils.toWei("0.02", "ether")}),
+      "Not enough ETH sent. Check re-roll price");
+  });
+
+  it("should not allow re-rolls of tokens that don't exist", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+    await utils.setUpSale(instance, owner);
+
+    const startSaleResult = await instance.startSale({from: owner});
+    const buyResult = await instance.dropPoops(1,
+      {from: bob, value: web3.utils.toWei("0.02", "ether")});
+    expect(buyResult.receipt.status).to.equal(true);
+    await expectRevert(instance.reRollTraits(20, 0,
+      {from: alice, value: web3.utils.toWei("0.08", "ether")}),
+      "Token doesn't exist");
+  });
+
+  it("should not allow anyone but the token owner to re-roll", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+    await utils.setUpSale(instance, owner);
+
+    const startSaleResult = await instance.startSale({from: owner});
+    const buyResult = await instance.dropPoops(1,
+      {from: bob, value: web3.utils.toWei("0.02", "ether")});
+    expect(buyResult.receipt.status).to.equal(true);
+    await expectRevert(instance.reRollTraits(0, 0,
+      {from: alice, value: web3.utils.toWei("0.08", "ether")}),
+      "Only token owner can re-roll");
+  });
+
+  it("should not allow re-rolls before max supply", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+    await utils.setUpSale(instance, owner);
+
+    const startSaleResult = await instance.startSale({from: owner});
+    const buyResult = await instance.dropPoops(1,
+      {from: bob, value: web3.utils.toWei("0.08", "ether")});
+    expect(buyResult.receipt.status).to.equal(true);
+    await expectRevert(instance.reRollTraits(0, 0,
+      {from: bob, value: web3.utils.toWei("0.08", "ether")}),
+      "Re-rolls will unlock at max supply!");
+  });
+
 });

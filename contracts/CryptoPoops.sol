@@ -16,9 +16,12 @@ import "./CryptoPoopTraits.sol";
 contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl, ReentrancyGuard {
   using SafeMath for uint8;
   using SafeMath for uint256;
+
   uint public constant MAX_POOPS = 6006;
   bool public hasSaleStarted = false;
   uint internal nextTokenId = 0;
+
+  uint internal reRollPriceInWei = 80000000000000000;
 
   // TODO: The IPFS hash for all CryptoPoops concatenated *might* stored here once all CryptoPoops are issued and if I figure it out
   string public METADATA_PROVENANCE_HASH = "";
@@ -49,13 +52,11 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl, ReentrancyGuard
 
     uint currentSupply = totalSupply();
     if (currentSupply >= 9900) {
-      return 1000000000000000000;        // 9900-10000: 1.00 ETH
-    } else if (currentSupply >= 9500) {
-      return 640000000000000000;         // 9500-9500:  0.64 ETH
+      return 690000000000000000;         // 9500-9500:  0.69 ETH
     } else if (currentSupply >= 7500) {
-      return 320000000000000000;         // 7500-9500:  0.32 ETH
+      return 420000000000000000;         // 7500-9500:  0.420 ETH
     } else if (currentSupply >= 3500) {
-      return 160000000000000000;         // 3500-7500:  0.16 ETH
+      return 190000000000000000;         // 3500-7500:  0.19 ETH
     } else if (currentSupply >= 1500) {
       return 80000000000000000;          // 1500-3500:  0.08 ETH 
     } else if (currentSupply >= 500) {
@@ -70,13 +71,11 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl, ReentrancyGuard
             "We are at max supply. Burn some in a paper bag...?");
 
     if (_id >= 9900) {
-      return 1000000000000000000;        // 9900-10000: 1.00 ETH
-    } else if (_id >= 9500) {
-      return 640000000000000000;         // 9500-9500:  0.64 ETH
+      return 690000000000000000;         // 9500-9500:  0.69 ETH
     } else if (_id >= 7500) {
-      return 320000000000000000;         // 7500-9500:  0.32 ETH
+      return 420000000000000000;         // 7500-9500:  0.420 ETH
     } else if (_id >= 3500) {
-      return 160000000000000000;         // 3500-7500:  0.16 ETH
+      return 190000000000000000;         // 3500-7500:  0.19 ETH
     } else if (_id >= 1500) {
       return 80000000000000000;          // 1500-3500:  0.08 ETH 
     } else if (_id >= 500) {
@@ -84,6 +83,10 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl, ReentrancyGuard
     } else {
       return 20000000000000000;          // 0 - 500     0.02 ETH
     }
+  }
+
+  function reRollPrice() external view returns (uint256) {
+    return reRollPriceInWei;
   }
 
   function dropPoops(uint256 numCryptoPoops) external payable nonReentrant {
@@ -104,6 +107,11 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl, ReentrancyGuard
   function _safeMintWithTraits(address _to, uint256 _mintId, uint8 _boost) internal {
     _safeMint(_to, _mintId);
 
+    uint64 encodedTraits = _assignTraits(_mintId, _boost);
+    emit TraitAssigned(_to, _mintId, encodedTraits);
+  }
+
+  function _assignTraits(uint256 _tokenId, uint8 _boost) internal returns (uint64) {
     uint8[NUM_CATEGORIES] memory assignedTraits;
     uint8 rarityLevel;
 
@@ -116,8 +124,20 @@ contract CryptoPoops is CryptoPoopTraits, ERC721, AccessControl, ReentrancyGuard
     }
 
     uint64 encodedTraits = encodeTraits(assignedTraits);
-    _tokenTraits[_mintId] = encodedTraits;
-    emit TraitAssigned(_to, _mintId, encodedTraits);
+    _tokenTraits[_tokenId] = encodedTraits;
+    return encodedTraits;
+  }
+
+  function reRollTraits(uint256 _tokenId, uint8 _boost) public payable nonReentrant {
+    require(msg.value >= reRollPriceInWei, "Not enough ETH sent. Check re-roll price");
+    require(_exists(_tokenId), "Token doesn't exist");
+    require(msg.sender == ERC721.ownerOf(_tokenId), "Only token owner can re-roll");
+    require(totalSupply() >= MAX_POOPS, "Re-rolls will unlock at max supply!");
+    // TODO: Check they're using an authorized amt of boost
+    // TODO: how to whitelist smart contracts for this?
+
+    uint64 encodedTraits = _assignTraits(_tokenId, _boost);
+    emit TraitAssigned(msg.sender, _tokenId, encodedTraits);
   }
 
   function traitsOf(uint256 tokenId) external view returns (uint64) {

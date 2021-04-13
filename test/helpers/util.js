@@ -56,6 +56,7 @@ function encodeTraits(chosenOptions) {
 module.exports = {
   shouldThrow,
   setUpCategories,
-  setUpSale
+  setUpSale,
+  encodeTraits,
 };
 
