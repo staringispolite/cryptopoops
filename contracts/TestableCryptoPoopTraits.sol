@@ -5,7 +5,7 @@ import './CryptoPoopTraits.sol';
 
 // Simply exists to expose the internal functions for testing.
 contract TestableCryptoPoopTraits is CryptoPoopTraits {
-  constructor() public {
+  constructor() {
     
   }
   
