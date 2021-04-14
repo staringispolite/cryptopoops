@@ -16,7 +16,8 @@ const utils = require('./helpers/util');
 contract("TestableCryptoPoops", async (accounts) => {
   let [owner, alice, bob] = accounts;
 
-  it("should allow re-rolls at max supply", async () => {
+  // Paused by default, since the test takes 10mins to sell out supply
+  xit("should allow re-rolls at max supply", async () => {
     const instance = await testableCryptoPoops.new("https://nftapi.com/cryptopoops/");
     await utils.setUpSale(instance, owner);
     await utils.advanceTimeAndBlock(300);
