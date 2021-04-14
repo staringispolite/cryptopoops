@@ -24,7 +24,6 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
 
   // Delegation to third party contracts
   bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-  bytes32 public constant FREE_MINTER_ROLE = keccak256("FREE_MINTER_ROLE");
   bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
   bytes32 public constant REROLLER_ROLE = keccak256("REROLLER_ROLE");
 
@@ -98,6 +97,9 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
     }
   }
 
+  /*
+   * Handy getter for websites and smart contracts
+   */
   function reRollPrice() external view returns (uint256) {
     return reRollPriceInWei;
   }
@@ -114,7 +116,8 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
            "We are at max supply. Burn some in a paper bag...?");
     require(numCryptoPoops > 0 && numCryptoPoops <= 20, "You can drop minimum 1, maximum 20 CryptoPoops");
     require(totalSupply().add(numCryptoPoops) <= MAX_POOPS, "Exceeds MAX_POOPS");
-    require(msg.value >= calculatePrice().mul(numCryptoPoops), "Ether value sent is below the price");
+    require(hasRole(MINTER_ROLE, msg.sender) || (msg.value >= calculatePrice().mul(numCryptoPoops)),
+           "Ether value sent is below the price");
 
     for (uint i = 0; i < numCryptoPoops; i++) {
       uint mintId = nextTokenId++;
@@ -155,15 +158,15 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
   }
 
   /*
-   * Allows token owners to re-roll traits
+   * Allows token owners to re-roll traits, if we're currently maxed out, or
+   * if a smart contract has been approved as a reroller.
    */
   function reRollTraits(uint256 _tokenId, uint8 _boost) public payable nonReentrant {
     require(msg.value >= reRollPriceInWei, "Not enough ETH sent. Check re-roll price");
     require(_exists(_tokenId), "Token doesn't exist");
     require(msg.sender == ERC721.ownerOf(_tokenId), "Only token owner can re-roll");
-    require(totalSupply() >= MAX_POOPS, "Re-rolls will unlock at max supply!");
+    require(hasRole(REROLLER_ROLE, msg.sender) || (totalSupply() >= MAX_POOPS), "Re-rolls will unlock at max supply!");
     // TODO: Check they're using an authorized amt of boost
-    // TODO: how to whitelist smart contracts for this?
 
     uint64 encodedTraits = _assignTraits(_tokenId, _boost);
     emit TraitAssigned(msg.sender, _tokenId, encodedTraits);
@@ -177,7 +180,7 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
   function burnToken(uint256 _tokenId) public nonReentrant {
     require(hasRole(BURNER_ROLE, msg.sender), "Not approved for burning");
     require(_exists(_tokenId), "Token doesn't exist");
-    require(msg.sender == ERC721.ownerOf(_tokenId), "Only token owner can re-roll");
+    require(msg.sender == ERC721.ownerOf(_tokenId), "Only token owner can burn");
 
     // Burn token via ERC-721
     _burn(tokenId);
