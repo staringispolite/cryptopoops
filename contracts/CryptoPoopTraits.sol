@@ -42,13 +42,14 @@ contract CryptoPoopTraits is ERC721, Ownable {
   // traitLookup[category][level][i] = an optionId
   uint8[][NUM_LEVELS][NUM_CATEGORIES] internal traitLookup;
 
-  // Mapping from token ID to encoded trait
+  // Mapping from token ID to trait encodings
   mapping (uint256 => uint64) internal _tokenTraits;
 
+  // Fired when an NFT rolls or re-rolls its traits
   event TraitAssigned(address indexed tokenOwner, uint256 tokenId, uint64 encodedTraits);
 
   constructor() ERC721("CryptoPoops","POOPS") {
-    // Initialize number boundaries for each level, on a 100-sided die:
+    // Initialize number boundaries for each rarity level, on a 100-sided die:
     // 50% chance of common, 25% uncommon, 15% rare, 9% epic, 1% legendary  
     levelProbabilities = [50, 75, 90, 99, 100]; 
 
@@ -62,6 +63,9 @@ contract CryptoPoopTraits is ERC721, Ownable {
     ];
   }
 
+  /*
+   * Choose a random rarity level
+   */
   function randomLevel() internal returns(uint8) {
     uint highestLevel = COMMON;
     uint randomNumber = uint(keccak256(abi.encodePacked(
@@ -74,9 +78,10 @@ contract CryptoPoopTraits is ERC721, Ownable {
     return uint8(highestLevel);
   }
 
-  // traitLookup[_category][_level] contains an array of IDs for this level and category
-  // eg. we might have rare backgrounds defined as 1.png, 2.png, and 21.png
-  // in that case, traitLookup[BACKGROUNDS][RARE] yields [1, 2, 21];
+  /*
+   * Choose a random trait from the specified category and rarity level
+   * @dev traitLookup[_category][_level] contains an array of IDs for this level and category
+   */
   function randomTrait(uint8 _level, uint8 _category) internal returns(uint8) {
     uint numOptions =  traitLookup[_category][_level].length;
     uint randomNumber = uint(keccak256(abi.encodePacked(
@@ -86,10 +91,13 @@ contract CryptoPoopTraits is ERC721, Ownable {
     return uint8(randomOptionId);
   }
 
-  // @dev an encoded uint64 that can store up to 8 distinct categories of max 32 options each
-  // Currently, our structure is the following:
-  //
-  // | unused byte | unused byte | unused byte | front acc | faces | bodies | back acc | backgrounds |
+  /*
+   * Encode traits into a single uint
+   *
+   * @dev an encoded uint64 that can store up to 8 distinct categories of max 32 options each
+   * The structure is the following:
+   * | unused byte | unused byte | unused byte | front acc | faces | bodies | back acc | backgrounds |
+   */
   function encodeTraits(uint8[NUM_CATEGORIES] memory _traits) internal pure returns(uint64) {
     uint64 encodedTraits= 0;
     for (uint8 i; i < NUM_CATEGORIES; i++) {

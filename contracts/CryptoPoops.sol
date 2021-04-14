@@ -16,10 +16,23 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
   using SafeMath for uint8;
   using SafeMath for uint256;
 
+  // Max NFTs total. Due to burning this won't be the max tokenId
   uint public constant MAX_POOPS = 6006;
+
+  // Allow for starting/pausing sale
   bool public hasSaleStarted = false;
+
+  // Delegation to third party contracts
+  bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+  bytes32 public constant FREE_MINTER_ROLE = keccak256("FREE_MINTER_ROLE");
+  bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
+  bytes32 public constant REROLLER_ROLE = keccak256("REROLLER_ROLE");
+
+  // Effectively a UUID. Only increments to avoid collisions
+  // possible if we were reusing token IDs
   uint internal nextTokenId = 0;
 
+  // Cost to re-roll, if and when re-rolls activate
   uint internal reRollPriceInWei = 80000000000000000;
 
   // TODO: The IPFS hash for all CryptoPoops concatenated *might* stored here once all CryptoPoops are issued and if I figure it out
@@ -27,6 +40,7 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
 
   constructor(string memory baseURI) {
     setBaseURI(baseURI);
+    _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
   }
 
   function tokensOfOwner(address _owner) external view returns(uint256[] memory ) {
@@ -88,6 +102,13 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
     return reRollPriceInWei;
   }
 
+  /*
+   * Main function for the NFT sale
+   *
+   * Prerequisites
+   *  - Not at max supply
+   *  - Sale has started
+   */
   function dropPoops(uint256 numCryptoPoops) external payable nonReentrant {
     require(totalSupply() < MAX_POOPS,
            "We are at max supply. Burn some in a paper bag...?");
@@ -101,8 +122,10 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
     }
   }
 
-  // @dev Combine minting and trait generation in one place, so all CryptoPoops
-  // get assigned traits correctly.
+  /*
+   * Combines minting and trait generation in one place, so all CryptoPoops
+   * get assigned traits correctly.
+   */
   function _safeMintWithTraits(address _to, uint256 _mintId, uint8 _boost) internal {
     _safeMint(_to, _mintId);
 
@@ -110,6 +133,10 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
     emit TraitAssigned(_to, _mintId, encodedTraits);
   }
 
+  /*
+   * Performs the random number generation for trait assignment
+   * and stores the result in the contract
+   */
   function _assignTraits(uint256 _tokenId, uint8 _boost) internal returns (uint64) {
     uint8[NUM_CATEGORIES] memory assignedTraits;
     uint8 rarityLevel;
@@ -127,6 +154,9 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
     return encodedTraits;
   }
 
+  /*
+   * Allows token owners to re-roll traits
+   */
   function reRollTraits(uint256 _tokenId, uint8 _boost) public payable nonReentrant {
     require(msg.value >= reRollPriceInWei, "Not enough ETH sent. Check re-roll price");
     require(_exists(_tokenId), "Token doesn't exist");
@@ -139,31 +169,34 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
     emit TraitAssigned(msg.sender, _tokenId, encodedTraits);
   }
 
+  /*
+   * Allows approved third party smart contracts to burn CryptoPoops
+   *
+   * Emits an ERC-721 {Transfer} event
+   */
+  function burnToken(uint256 _tokenId) public nonReentrant {
+    require(hasRole(BURNER_ROLE, msg.sender), "Not approved for burning");
+    require(_exists(_tokenId), "Token doesn't exist");
+    require(msg.sender == ERC721.ownerOf(_tokenId), "Only token owner can re-roll");
+
+    // Burn token via ERC-721
+    _burn(tokenId);
+
+    // Successful burn, clear traits
+    delete _tokenTraits[tokenId];
+  }
+
+  /*
+   * Get traits of an individual token. Might come in handy
+   */
   function traitsOf(uint256 tokenId) external view returns (uint64) {
     require(_exists(tokenId), "Traits query for nonexistent token");
     return _tokenTraits[tokenId];
   }
 
-  // God Mode
-  function setProvenanceHash(string memory _hash) public onlyOwner {
-    METADATA_PROVENANCE_HASH = _hash;
-  }
-
-  function setBaseURI(string memory baseURI) public onlyOwner {
-    _setBaseURI(baseURI);
-  }
-
-  function startSale() public onlyOwner {
-    hasSaleStarted = true;
-  }
-  function pauseSale() public onlyOwner {
-    hasSaleStarted = false;
-  }
-
-  function withdrawAll() public payable onlyOwner {
-    require(payable(msg.sender).send(address(this).balance));
-  }
-
+  /*
+   * Only valid before the sales starts, for giveaways/team thank you's
+   */
   function reserveGiveaway(uint256 numCryptoPoops) public onlyOwner {
     uint currentSupply = totalSupply();
     require(totalSupply().add(numCryptoPoops) <= 69, "Exceeded giveaway supply");
@@ -181,6 +214,27 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
     // Finalize the interface and implement this for real
     return ((interfaceID != 0xffffffff) &&  // Return false for this, per spec
             (interfaceID ^ 0x80ac58cd > 0)); // non-optional ERC-721 functions
+  }
+
+  // God Mode
+  function setProvenanceHash(string memory _hash) public onlyOwner {
+    METADATA_PROVENANCE_HASH = _hash;
+  }
+
+  function setBaseURI(string memory baseURI) public onlyOwner {
+    _setBaseURI(baseURI);
+  }
+
+  function startSale() public onlyOwner {
+    hasSaleStarted = true;
+  }
+
+  function pauseSale() public onlyOwner {
+    hasSaleStarted = false;
+  }
+
+  function withdrawAll() public payable onlyOwner {
+    require(payable(msg.sender).send(address(this).balance));
   }
 
 }
