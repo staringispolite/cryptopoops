@@ -29,19 +29,19 @@ contract("TestableCryptoPoops", async (accounts) => {
     await utils.advanceTimeAndBlock(300);
 
     // Use up supply to unlock re-rolls
-    for (let i = 0; i < 301; i++) {
-      await instance._test_mint50({
-        from: alice, gas: "10000000" });
+    for (let i = 0; i < 60; i++) {
+      await instance._test_mint100({
+        from: alice, gas: "12000000" });
       await utils.advanceTimeAndBlock(300);
-      console.log('minted 20 more');
+      console.log('minted 100 more');
     }
 
     const reRollResult = await instance._test_reRollTraits(0, 0, {
       from: bob, value: "80000000000000000"});
     const secondEncodedTraits = await instance.traitsOf(0);
 
-    expectEvent(reRollResult, "TraitAssigned", {
-      tokenOwner: bob, tokenId: new BN(0), encodedTraits: encodedTraits });
+    await expectEvent(reRollResult, "TraitAssigned", {
+      tokenOwner: bob, tokenId: new BN(0), encodedTraits: secondEncodedTraits });
     expect(firstEncodedTraits.toString()).not.to.equal(secondEncodedTraits.toString);
-  });
+  }).timeout(700000);
 });
