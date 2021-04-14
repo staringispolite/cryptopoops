@@ -1,6 +1,7 @@
 var chai = require('chai');
 var expect = chai.expect;
-var web3 = require('web3');
+const Web3 = require('web3');
+const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:9545'));
 
 const {
   BN,           // Big Number support

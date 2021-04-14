@@ -1,5 +1,7 @@
 var chai = require('chai');
 var expect = chai.expect;
+const Web3 = require('web3');
+const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:7545'));
 
 const {
   BN,           // Big Number support
@@ -17,21 +19,25 @@ contract("TestableCryptoPoops", async (accounts) => {
   it("should allow re-rolls at max supply", async () => {
     const instance = await testableCryptoPoops.new("https://nftapi.com/cryptopoops/");
     await utils.setUpSale(instance, owner);
+    await utils.advanceTimeAndBlock(300);
 
     const startSaleResult = await instance.startSale({from: owner});
-    const buyResult = await instance.dropPoops(1,
-      {from: bob, value: web3.utils.toWei("0.08", "ether")});
+    const buyResult = await instance.dropPoops(20,  // ***THESE 20 mint fine
+      {from: bob, value: web3.utils.toWei("0.4", "ether")});
     const firstEncodedTraits = await instance.traitsOf(0);
+    console.log('dropped 20 poops');
+    await utils.advanceTimeAndBlock(300);
 
     // Use up supply to unlock re-rolls
-    for (let i = 0; i < 13; i++) {
-      await instance._test_mint500({from: alice});
+    for (let i = 0; i < 301; i++) {
+      await instance._test_mint50({
+        from: alice, gas: "10000000" });
+      await utils.advanceTimeAndBlock(300);
+      console.log('minted 20 more');
     }
 
     const reRollResult = await instance._test_reRollTraits(0, 0, {
-      from: bob,
-      value: web3.utils.toWei("0.08", "ether"),
-      gas: web3.utils.toWei("0.08", "ether")});
+      from: bob, value: "80000000000000000"});
     const secondEncodedTraits = await instance.traitsOf(0);
 
     expectEvent(reRollResult, "TraitAssigned", {

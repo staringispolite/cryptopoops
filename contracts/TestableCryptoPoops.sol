@@ -11,15 +11,16 @@ contract TestableCryptoPoops is CryptoPoops {
 
   // @dev Tetsing only: to get to max supply. Ganache can't handle
   // 6006 in one transaction (probably hitting some EVM stack limit
-  function _test_mint500() public {
-    uint256 toMint = 500;
+  function _test_mint50() public {
+    uint256 toMint = 50;
     uint256 i = 0;
     while (i < toMint && totalSupply() < MAX_POOPS) {
       _mint(msg.sender, nextTokenId++);
+      i++;
     }
   }
 
-  // @dev note: call _test_mint500() first in tests to reach the max
+  // @dev note: call _test_mint#() first in tests to reach the max
   function _test_reRollTraits(uint256 _tokenId, uint8 _boost) public payable {
     reRollTraits(_tokenId, _boost);
   }
