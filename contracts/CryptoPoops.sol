@@ -183,18 +183,18 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
     require(msg.sender == ERC721.ownerOf(_tokenId), "Only token owner can burn");
 
     // Burn token via ERC-721
-    _burn(tokenId);
+    _burn(_tokenId);
 
     // Successful burn, clear traits
-    delete _tokenTraits[tokenId];
+    delete _tokenTraits[_tokenId];
   }
 
   /*
    * Get traits of an individual token. Might come in handy
    */
-  function traitsOf(uint256 tokenId) external view returns (uint64) {
-    require(_exists(tokenId), "Traits query for nonexistent token");
-    return _tokenTraits[tokenId];
+  function traitsOf(uint256 _tokenId) external view returns (uint64) {
+    require(_exists(_tokenId), "Traits query for nonexistent token");
+    return _tokenTraits[_tokenId];
   }
 
   /*
