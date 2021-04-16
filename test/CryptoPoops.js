@@ -64,11 +64,16 @@ contract("CryptoPoops", async (accounts) => {
     const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
     await utils.setUpSale(instance, owner);
 
+    // Set up sale
     const startSaleResult = await instance.startSale({from: owner});
     expect(startSaleResult.receipt.status).to.equal(true);
+
+    // Buy
     const buyResult = await instance.dropPoops(1,
       {from: bob, value: web3.utils.toWei("0.02", "ether")});
     expect(buyResult.receipt.status).to.equal(true);
+
+    // Confirm buy
     const numPoops = await instance.totalSupply({from: bob});
     expect(numPoops.toNumber()).to.equal(1);
     const encodedTraits = await instance.traitsOf(0);
@@ -138,6 +143,116 @@ contract("CryptoPoops", async (accounts) => {
     await expectRevert(instance.reRollTraits(0, 0,
       {from: bob, value: web3.utils.toWei("0.08", "ether")}),
       "Re-rolls will unlock at max supply!");
+  });
+
+  it("should allow re-rolls before max supply if whitelisted", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+    await utils.setUpSale(instance, owner);
+
+    const startSaleResult = await instance.startSale({from: owner});
+    const buyResult = await instance.dropPoops(1,
+      {from: bob, value: web3.utils.toWei("0.08", "ether")});
+    const firstEncodedTraits = await instance.traitsOf(0);
+    expect(buyResult.receipt.status).to.equal(true);
+
+    // Grant role
+    const reRollerRole = await instance.REROLLER_ROLE();
+    const grantResult = await instance.grantRole(reRollerRole, bob, {from: owner});
+
+    const reRollResult = await instance.reRollTraits(0, 0,
+      {from: bob, value: web3.utils.toWei("0.08", "ether")});
+    const secondEncodedTraits = await instance.traitsOf(0);
+    expect(firstEncodedTraits.toString()).not.to.equal(secondEncodedTraits.toString());
+  });
+
+  it("should not allow burning normally", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+    await utils.setUpSale(instance, owner);
+
+    const startSaleResult = await instance.startSale({from: owner});
+    const buyResult = await instance.dropPoops(1,
+      {from: bob, value: web3.utils.toWei("0.08", "ether")});
+    const firstEncodedTraits = await instance.traitsOf(0);
+    expect(buyResult.receipt.status).to.equal(true);
+
+    await expectRevert(instance.burnToken(0, {from: bob}),
+      "Not approved for burning");
+  });
+
+  it("should allow burning if whitelisted", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+    await utils.setUpSale(instance, owner);
+
+    const startSaleResult = await instance.startSale({from: owner});
+    const buyResult = await instance.dropPoops(1,
+      {from: bob, value: web3.utils.toWei("0.08", "ether")});
+    const firstEncodedTraits = await instance.traitsOf(0);
+    expect(buyResult.receipt.status).to.equal(true);
+
+    // Grant role
+    const burnerRole = await instance.BURNER_ROLE();
+    const grantResult = await instance.grantRole(burnerRole, bob, {from: owner});
+
+    const burnResult = await instance.burnToken(0, {from: bob});
+    expect(buyResult.receipt.status).to.equal(true);
+
+    await expectRevert(instance.traitsOf(0),
+      "Traits query for nonexistent token");
+  });
+
+  it("should not allow burning NFTs you don't own", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+    await utils.setUpSale(instance, owner);
+
+    const startSaleResult = await instance.startSale({from: owner});
+    const buyResult = await instance.dropPoops(1,
+      {from: bob, value: web3.utils.toWei("0.08", "ether")});
+    const firstEncodedTraits = await instance.traitsOf(0);
+    expect(buyResult.receipt.status).to.equal(true);
+
+    // Grant role
+    const burnerRole = await instance.BURNER_ROLE();
+    const grantResult = await instance.grantRole(burnerRole, alice, {from: owner});
+
+    await expectRevert(instance.burnToken(0, {from: alice}),
+      "Only token owner can burn");
+  });
+
+  it("should require the correct price if not whitelisted", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+    await utils.setUpSale(instance, owner);
+
+    // Set up the sale
+    const startSaleResult = await instance.startSale({from: owner});
+    expect(startSaleResult.receipt.status).to.equal(true);
+
+    // Buy with no ETH
+    await expectRevert(instance.dropPoops(1, {from: alice}),
+      "Ether value sent is below the price");
+  });
+
+  it("should allow minting for free if whitelisted", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+    await utils.setUpSale(instance, owner);
+
+    // Set up the sale
+    const startSaleResult = await instance.startSale({from: owner});
+    expect(startSaleResult.receipt.status).to.equal(true);
+
+    // Grant role
+    const minterRole = await instance.MINTER_ROLE();
+    const grantResult = await instance.grantRole(minterRole, alice, {from: owner});
+
+    // Buy with no ETH
+    const buyResult = await instance.dropPoops(1, {from: alice});
+    expect(buyResult.receipt.status).to.equal(true);
+
+    // Confirm minting
+    const numPoops = await instance.totalSupply({from: alice});
+    expect(numPoops.toNumber()).to.equal(1);
+    const encodedTraits = await instance.traitsOf(0);
+    expectEvent(buyResult, "TraitAssigned", {
+      tokenOwner: alice, tokenId: new BN(0), encodedTraits: encodedTraits });
   });
 
 });

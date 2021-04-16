@@ -45,4 +45,18 @@ contract("TestableCryptoPoops", async (accounts) => {
       tokenOwner: bob, tokenId: new BN(0), encodedTraits: secondEncodedTraits });
     expect(firstEncodedTraits.toString()).not.to.equal(secondEncodedTraits.toString);
   }).timeout(700000);
+
+  it("should allow re-rolls before max supply if whitelisted", async () => {
+    const instance = await testableCryptoPoops.new("https://nftapi.com/cryptopoops/");
+    await utils.setUpSale(instance, owner);
+
+    const startSaleResult = await instance.startSale({from: owner});
+    const buyResult = await instance.dropPoops(20,  // ***THESE 20 mint fine
+      {from: bob, value: web3.utils.toWei("0.4", "ether")});
+    const firstEncodedTraits = await instance.traitsOf(0);
+    console.log('dropped 20 poops');
+    await utils.advanceTimeAndBlock(300);
+  });
+
+
 });
