@@ -71,18 +71,45 @@ contract("CryptoPoops", async (accounts) => {
   it("should allow owner to reserve giveaway NFTs before sale", async () => {
     const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
 
-    const numToGiveaway = 30;
-    const txn = await instance.reserveGiveaway(numToGiveaway, {from: owner});
-    
+    let txn = await instance.reserveGiveaway(20, {from: owner});
+    expect(txn.receipt.status).to.equal(true);
+    await utils.advanceTimeAndBlock(300);
+    txn = await instance.reserveGiveaway(20, {from: owner});
+    expect(txn.receipt.status).to.equal(true);
+    await utils.advanceTimeAndBlock(300);
+    txn = await instance.reserveGiveaway(20, {from: owner});
+    expect(txn.receipt.status).to.equal(true);
+    await utils.advanceTimeAndBlock(300);
+    txn = await instance.reserveGiveaway(10, {from: owner});
+    expect(txn.receipt.status).to.equal(true);
+
     const NFTs = await instance.tokensOfOwner(owner);
-    expect(NFTs.length).to.equal(numToGiveaway);
+    expect(NFTs.length).to.equal(70);
+  });
+
+  it("should not allow owner to reserve more than 70 giveaway NFTs before sale", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+
+    let txn = await instance.reserveGiveaway(20, {from: owner});
+    expect(txn.receipt.status).to.equal(true);
+    await utils.advanceTimeAndBlock(300);
+    txn = await instance.reserveGiveaway(20, {from: owner});
+    expect(txn.receipt.status).to.equal(true);
+    await utils.advanceTimeAndBlock(300);
+    txn = await instance.reserveGiveaway(20, {from: owner});
+    expect(txn.receipt.status).to.equal(true);
+    await utils.advanceTimeAndBlock(300);
+    txn = await instance.reserveGiveaway(10, {from: owner});
+    expect(txn.receipt.status).to.equal(true);
+    
+    await expectRevert(instance.reserveGiveaway(1, {from: owner}),
+      "Exceeded giveaway supply");
   });
 
   it("should not allow users to reserve giveaway NFTs before sale", async () => {
     const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
 
-    const numToGiveaway = 69;
-    await expectRevert(instance.reserveGiveaway(numToGiveaway, {from: bob}),
+    await expectRevert(instance.reserveGiveaway(1, {from: bob}),
       "Ownable: caller is not the owner -- Reason given: Ownable: caller is not the owner.");
   });
 

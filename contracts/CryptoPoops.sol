@@ -193,7 +193,7 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
    */
   function reserveGiveaway(uint256 numCryptoPoops) public onlyOwner {
     uint currentSupply = totalSupply();
-    require(totalSupply().add(numCryptoPoops) <= 69, "Exceeded giveaway supply");
+    require(totalSupply().add(numCryptoPoops) <= 70, "Exceeded giveaway supply");
     require(hasSaleStarted == false, "Sale has already started");
     uint256 index;
     // Reserved for people who helped this project and giveaways
