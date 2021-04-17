@@ -41,15 +41,4 @@ contract("TestableCryptoPoops", async (accounts) => {
 
   }).timeout(900000);
 
-  it("should allow re-rolls before max supply if whitelisted", async () => {
-    const instance = await testableCryptoPoops.new("https://nftapi.com/cryptopoops/");
-    await utils.setUpSale(instance, owner);
-
-    const startSaleResult = await instance.startSale({from: owner});
-    const buyResult = await instance.dropPoops(20, 0,
-      {from: bob, value: web3.utils.toWei("0.4", "ether")});
-    const firstEncodedTraits = await instance.traitsOf(0);
-    await utils.advanceTimeAndBlock(300);
-  });
-
 });
