@@ -106,12 +106,24 @@ contract CryptoPoopTraits is ERC721, Ownable {
     return encodedTraits;
   }
 
+  /*
+   * Set the rarity level options for the trait encoding
+   *
+   * @dev This allows for lower gas in contract deploy and avoids potential gaslimit overruns
+   * MUST SET THESE AT LEAST ONCE BEFORE STARTING THE SALE
+   */
   function setLevelProbabilities(uint8[] calldata _levelProbabilities) external onlyOwner {
     require(_levelProbabilities.length == NUM_LEVELS,
             "Array length doesn't match number of levels");
     levelProbabilities = _levelProbabilities;
   }
 
+  /*
+   * Set the trait options for the trait encoding for a given category, by rarity level
+   *
+   * @dev This allows for lower gas in contract deploy and avoids potential gaslimit overruns
+   * MUST SET THESE AT LEAST ONCE BEFORE STARTING THE SALE
+   */
   function setCategoryOptions(uint8[] calldata _commonOptions, uint8[] calldata _uncommonOptions,
       uint8[] calldata _rareOptions, uint8[] calldata _epicOptions, uint8[] calldata _legendaryOptions,
       uint8 _categoryNumber) external onlyOwner {
@@ -124,6 +136,11 @@ contract CryptoPoopTraits is ERC721, Ownable {
     traitLookup[_categoryNumber][LEGENDARY] = _legendaryOptions;
   }
 
+  /*
+   * Get the trait options for a given category and rarity combination
+   *
+   * @dev Useful in testing and may be useful for a contract ecosystem
+   */
   function getCategoryOptions(uint8 _categoryNumber, uint8 _rarityLevel) external view returns(uint8[] memory) {
     require(_categoryNumber < NUM_CATEGORIES, "Category number doesn't exist");
     require(_rarityLevel < NUM_LEVELS, "Rarity level doesn't exist");
@@ -137,4 +154,5 @@ contract CryptoPoopTraits is ERC721, Ownable {
 
     return options;
   }
+
 }
