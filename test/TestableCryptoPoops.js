@@ -23,7 +23,7 @@ contract("TestableCryptoPoops", async (accounts) => {
     await utils.advanceTimeAndBlock(300);
 
     const startSaleResult = await instance.startSale({from: owner});
-    const buyResult = await instance.dropPoops(20,  // ***THESE 20 mint fine
+    const buyResult = await instance.dropPoops(20, 0,
       {from: bob, value: web3.utils.toWei("0.4", "ether")});
     const firstEncodedTraits = await instance.traitsOf(0);
     await utils.advanceTimeAndBlock(300);
@@ -36,7 +36,10 @@ contract("TestableCryptoPoops", async (accounts) => {
       await utils.advanceTimeAndBlock(300);
     }
 
-  }).timeout(700000);
+    const numPoops = await instance.totalSupply();
+    expect(numPoops.toString()).to.equal("6006");
+
+  }).timeout(900000);
 
   it("should allow re-rolls before max supply if whitelisted", async () => {
     const instance = await testableCryptoPoops.new("https://nftapi.com/cryptopoops/");
