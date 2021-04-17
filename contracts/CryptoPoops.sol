@@ -31,9 +31,6 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
   // possible if we were reusing token IDs
   uint internal nextTokenId = 0;
 
-  // Cost to re-roll, if and when re-rolls activate
-  uint internal reRollPriceInWei = 80000000000000000;
-
   // TODO: The IPFS hash for all CryptoPoops concatenated *might* stored here once all CryptoPoops are issued and if I figure it out
   string public METADATA_PROVENANCE_HASH = "";
 
@@ -98,30 +95,25 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
   }
 
   /*
-   * Handy getter for websites and smart contracts
-   */
-  function reRollPrice() external view returns (uint256) {
-    return reRollPriceInWei;
-  }
-
-  /*
    * Main function for the NFT sale
    *
    * Prerequisites
    *  - Not at max supply
    *  - Sale has started
    */
-  function dropPoops(uint256 numCryptoPoops) external payable nonReentrant {
+  function dropPoops(uint256 numCryptoPoops, uint8 boost) external payable nonReentrant {
     require(totalSupply() < MAX_POOPS,
            "We are at max supply. Burn some in a paper bag...?");
     require(numCryptoPoops > 0 && numCryptoPoops <= 20, "You can drop minimum 1, maximum 20 CryptoPoops");
     require(totalSupply().add(numCryptoPoops) <= MAX_POOPS, "Exceeds MAX_POOPS");
     require(hasRole(MINTER_ROLE, msg.sender) || (msg.value >= calculatePrice().mul(numCryptoPoops)),
            "Ether value sent is below the price");
+    require(hasRole(MINTER_ROLE, msg.sender) || (boost == 0),
+            "If you'd like a contract to be whitelisted for minting or boost, say hi in the Discord");
 
     for (uint i = 0; i < numCryptoPoops; i++) {
       uint mintId = nextTokenId++;
-      _safeMintWithTraits(msg.sender, mintId, 0);
+      _safeMintWithTraits(msg.sender, mintId, boost);
     }
   }
 
@@ -158,15 +150,13 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
   }
 
   /*
-   * Allows token owners to re-roll traits, if we're currently maxed out, or
-   * if a smart contract has been approved as a reroller.
+   * Allows a smart contract to re-roll traits if it's been approved as a reroller.
    */
   function reRollTraits(uint256 _tokenId, uint8 _boost) public payable nonReentrant {
-    require(msg.value >= reRollPriceInWei, "Not enough ETH sent. Check re-roll price");
     require(_exists(_tokenId), "Token doesn't exist");
     require(msg.sender == ERC721.ownerOf(_tokenId), "Only token owner can re-roll");
-    require(hasRole(REROLLER_ROLE, msg.sender) || (totalSupply() >= MAX_POOPS), "Re-rolls will unlock at max supply!");
-    // TODO: Check they're using an authorized amt of boost
+    require(hasRole(REROLLER_ROLE, msg.sender),
+      "If you'd like a contract to be whitelisted for re-rolls, say hi in the Discord");
 
     uint64 encodedTraits = _assignTraits(_tokenId, _boost);
     emit TraitAssigned(msg.sender, _tokenId, encodedTraits);

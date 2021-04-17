@@ -51,12 +51,11 @@ contract("TestableCryptoPoops", async (accounts) => {
     await utils.setUpSale(instance, owner);
 
     const startSaleResult = await instance.startSale({from: owner});
-    const buyResult = await instance.dropPoops(20,  // ***THESE 20 mint fine
+    const buyResult = await instance.dropPoops(20, 0,
       {from: bob, value: web3.utils.toWei("0.4", "ether")});
     const firstEncodedTraits = await instance.traitsOf(0);
     console.log('dropped 20 poops');
     await utils.advanceTimeAndBlock(300);
   });
-
 
 });
