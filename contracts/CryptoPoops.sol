@@ -7,6 +7,7 @@ pragma solidity ^0.7.0;
 import "./access/Ownable.sol";
 import "./access/AccessControl.sol";
 import "./security/ReentrancyGuard.sol";
+import "./introspection/ERC165.sol";
 
 import "./CryptoPoopTraits.sol"; 
 
@@ -34,11 +35,35 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
   // TODO: The IPFS hash for all CryptoPoops concatenated *might* stored here once all CryptoPoops are issued and if I figure it out
   string public METADATA_PROVENANCE_HASH = "";
 
+  /*
+   *     bytes4(keccak256('setLevelProbabilities(uint8[]')) == 0x63a280a5
+   *     bytes4(keccak256('setCategoryOptions(
+   *       uint8[],uint8[],uint8[],uint8[],uint8[],uint8[])')) == 0x60b4911a
+   *     bytes4(keccak256('getCategoryOptions(uint8,uint8)')) == 0x5e6c82f7
+   *     bytes4(keccak256('reRollTraits(uint256,uint8)')) == 0x666644d0
+   *     bytes4(keccak256('traitsOf(uint256)')) == 0x5efab6e4
+   *
+   *     => 0x63a280a5 ^ 0x60b4911a ^ 0x5e6c82f7 ^ 0x666644d0 ^ 0x5efab6e4 == 0x65e6617c
+   */
+  bytes4 private constant _INTERFACE_ID_ENCODED_TRAITS = 0x65e6617c;
+
+  /*
+   * Set up the basics
+   *
+   * @dev It will NOT be ready to start sale immediately upon deploy
+   */
   constructor(string memory baseURI) {
     setBaseURI(baseURI);
     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+
+    // Register the supported interfaces to conform to ERC721
+    // and our own encoded traits interface via ERC165
+    _registerInterface(_INTERFACE_ID_ENCODED_TRAITS);
   }
 
+  /*
+   * Get the tokens owned by _owner
+   */
   function tokensOfOwner(address _owner) external view returns(uint256[] memory ) {
     uint256 tokenCount = balanceOf(_owner);
     if (tokenCount == 0) {
@@ -54,43 +79,19 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
     }
   }
 
+  /*
+   * Calculate price for the immediate next NFT minted
+   */
   function calculatePrice() public view returns (uint256) {
     require(hasSaleStarted == true, "Sale hasn't started");
     require(totalSupply() < MAX_POOPS,
             "We are at max supply. Burn some in a paper bag...?");
 
     uint currentSupply = totalSupply();
-    if (currentSupply >= 9900) {
-      return 690000000000000000;         // 9500-9500:  0.69 ETH
-    } else if (currentSupply >= 7500) {
-      return 420000000000000000;         // 7500-9500:  0.420 ETH
-    } else if (currentSupply >= 3500) {
-      return 190000000000000000;         // 3500-7500:  0.19 ETH
-    } else if (currentSupply >= 1500) {
-      return 80000000000000000;          // 1500-3500:  0.08 ETH 
-    } else if (currentSupply >= 500) {
-      return 40000000000000000;          // 500-1500:   0.04 ETH 
+    if (currentSupply >= 1338) {
+      return 69000000000000000;         // 1338-6006:   0.069 ETH
     } else {
-      return 20000000000000000;          // 0 - 500     0.02 ETH
-    }
-  }
-
-  function calculatePriceForToken(uint _id) external view returns (uint256) {
-    require(totalSupply() < MAX_POOPS,
-            "We are at max supply. Burn some in a paper bag...?");
-
-    if (_id >= 9900) {
-      return 690000000000000000;         // 9500-9500:  0.69 ETH
-    } else if (_id >= 7500) {
-      return 420000000000000000;         // 7500-9500:  0.420 ETH
-    } else if (_id >= 3500) {
-      return 190000000000000000;         // 3500-7500:  0.19 ETH
-    } else if (_id >= 1500) {
-      return 80000000000000000;          // 1500-3500:  0.08 ETH 
-    } else if (_id >= 500) {
-      return 40000000000000000;          // 500-1500:   0.04 ETH 
-    } else {
-      return 20000000000000000;          // 0 - 500     0.02 ETH
+      return 42000000000000000;         // 0 - 1337:   0.0420 ETH
     }
   }
 
@@ -167,7 +168,7 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
    *
    * Emits an ERC-721 {Transfer} event
    */
-  function burnToken(uint256 _tokenId) public nonReentrant {
+  function burnToken(uint256 _tokenId) public payable nonReentrant {
     require(hasRole(BURNER_ROLE, msg.sender), "Not approved for burning");
     require(_exists(_tokenId), "Token doesn't exist");
     require(msg.sender == ERC721.ownerOf(_tokenId), "Only token owner can burn");
@@ -201,12 +202,12 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
     }
   }
 
-  // ERC 165
-  // TODO: Can we save gas by going into ERC165.sol and making this external view?
-  function supportsInterface(bytes4 interfaceID) public pure override(AccessControl, ERC165) returns (bool) {
-    // Finalize the interface and implement this for real
-    return ((interfaceID != 0xffffffff) &&  // Return false for this, per spec
-            (interfaceID ^ 0x80ac58cd > 0)); // non-optional ERC-721 functions
+  /**
+   * @dev See {IERC165-supportsInterface}.
+   */
+  function supportsInterface(bytes4 interfaceId) public view override(ERC165, AccessControl) returns (bool) {
+      return AccessControl.supportsInterface(interfaceId) ||
+             ERC165.supportsInterface(interfaceId);
   }
 
   // God Mode
@@ -230,14 +231,8 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
     require(payable(msg.sender).send(address(this).balance));
   }
 
-}
-
-// TODO: Delete this after calculating on the dev chain locally
-contract Selector {
   // Calculate XOR of all function selectors
   function calculateSelector() public pure returns (bytes4) {
-    CryptoPoops cp;
-    return cp.supportsInterface.selector ^ 
-      cp.balanceOf.selector ^ cp.ownerOf.selector ^ cp.approve.selector;
+    return type(IAccessControl).interfaceId;
   }  
 }

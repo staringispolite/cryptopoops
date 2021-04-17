@@ -11,11 +11,50 @@ const {
 } = require('@openzeppelin/test-helpers');
 
 const cryptoPoops = artifacts.require('CryptoPoops');
-const testCryptoPoopTraits = artifacts.require('TestableCryptoPoopTraits');
 const utils = require('./helpers/util');
 
 contract("CryptoPoops", async (accounts) => {
   let [owner, alice, bob] = accounts;
+
+  // Only for use when grabbing selectors or interface IDs before deploy
+  xit("should print its selector hashes", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+
+    console.log('see CryptoPoops.sol::calculateSelector for which this is:');
+    console.log(await instance.calculateSelector());
+  });
+
+  it("should report that it supports the ERC721 interfaces", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+
+    const _INTERFACE_ID_ERC721 = "0x80ac58cd";
+    const _INTERFACE_ID_ERC721_METADATA = "0x5b5e139f";
+    const _INTERFACE_ID_ERC721_ENUMERABLE = "0x780e9d63";
+
+    let supportResponse = await instance.supportsInterface(_INTERFACE_ID_ERC721);
+    expect(supportResponse).to.equal(true);
+    supportResponse = await instance.supportsInterface(_INTERFACE_ID_ERC721_METADATA);
+    expect(supportResponse).to.equal(true);
+    supportResponse = await instance.supportsInterface(_INTERFACE_ID_ERC721_ENUMERABLE);
+    expect(supportResponse).to.equal(true);
+  });
+
+  it("should report that it supports the AccessControl interface", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+
+    const ACCESS_CONTROL_INTERFACE_ID = "0x7965db0b";
+    const supportResponse = await instance.supportsInterface(ACCESS_CONTROL_INTERFACE_ID);
+    expect(supportResponse).to.equal(true);
+  });
+
+
+  it("should report that it supports our encoded traits interface", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+
+    const ENCODED_TRAITS_INTERFACE_ID = "0x65e6617c";
+    const supportResponse = await instance.supportsInterface(ENCODED_TRAITS_INTERFACE_ID);
+    expect(supportResponse).to.equal(true);
+  });
 
   it("should not allow users to buy before sale", async () => {
     const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
@@ -71,7 +110,7 @@ contract("CryptoPoops", async (accounts) => {
 
     // Buy
     const buyResult = await instance.dropPoops(1, 0,
-      {from: bob, value: web3.utils.toWei("0.02", "ether")});
+      {from: bob, value: web3.utils.toWei("0.042", "ether")});
     expect(buyResult.receipt.status).to.equal(true);
 
     // Confirm buy
@@ -100,10 +139,10 @@ contract("CryptoPoops", async (accounts) => {
 
     const startSaleResult = await instance.startSale({from: owner});
     const buyResult = await instance.dropPoops(1, 0,
-      {from: bob, value: web3.utils.toWei("0.02", "ether")});
+      {from: bob, value: web3.utils.toWei("0.042", "ether")});
     expect(buyResult.receipt.status).to.equal(true);
     await expectRevert(instance.reRollTraits(20, 0,
-      {from: alice, value: web3.utils.toWei("0.08", "ether")}),
+      {from: alice, value: web3.utils.toWei("0.84", "ether")}),
       "Token doesn't exist");
   });
 
@@ -113,7 +152,7 @@ contract("CryptoPoops", async (accounts) => {
 
     const startSaleResult = await instance.startSale({from: owner});
     const buyResult = await instance.dropPoops(1, 0,
-      {from: bob, value: web3.utils.toWei("0.02", "ether")});
+      {from: bob, value: web3.utils.toWei("0.042", "ether")});
     expect(buyResult.receipt.status).to.equal(true);
     await expectRevert(instance.reRollTraits(0, 0,
       {from: alice, value: web3.utils.toWei("0.08", "ether")}),
@@ -126,7 +165,7 @@ contract("CryptoPoops", async (accounts) => {
 
     const startSaleResult = await instance.startSale({from: owner});
     const buyResult = await instance.dropPoops(1, 0,
-      {from: bob, value: web3.utils.toWei("0.08", "ether")});
+      {from: bob, value: web3.utils.toWei("0.042", "ether")});
     const firstEncodedTraits = await instance.traitsOf(0);
     expect(buyResult.receipt.status).to.equal(true);
 
@@ -145,7 +184,7 @@ contract("CryptoPoops", async (accounts) => {
 
     const startSaleResult = await instance.startSale({from: owner});
     const buyResult = await instance.dropPoops(1, 0,
-      {from: bob, value: web3.utils.toWei("0.08", "ether")});
+      {from: bob, value: web3.utils.toWei("0.042", "ether")});
     const firstEncodedTraits = await instance.traitsOf(0);
     expect(buyResult.receipt.status).to.equal(true);
 
@@ -159,7 +198,7 @@ contract("CryptoPoops", async (accounts) => {
 
     const startSaleResult = await instance.startSale({from: owner});
     const buyResult = await instance.dropPoops(1, 0,
-      {from: bob, value: web3.utils.toWei("0.08", "ether")});
+      {from: bob, value: web3.utils.toWei("0.042", "ether")});
     const firstEncodedTraits = await instance.traitsOf(0);
     expect(buyResult.receipt.status).to.equal(true);
 
@@ -180,7 +219,7 @@ contract("CryptoPoops", async (accounts) => {
 
     const startSaleResult = await instance.startSale({from: owner});
     const buyResult = await instance.dropPoops(1, 0,
-      {from: bob, value: web3.utils.toWei("0.08", "ether")});
+      {from: bob, value: web3.utils.toWei("0.042", "ether")});
     const firstEncodedTraits = await instance.traitsOf(0);
     expect(buyResult.receipt.status).to.equal(true);
 
@@ -211,7 +250,7 @@ contract("CryptoPoops", async (accounts) => {
 
     const startSaleResult = await instance.startSale({from: owner});
     const buyResult = await instance.dropPoops(1, 0,
-      {from: bob, value: web3.utils.toWei("0.08", "ether")});
+      {from: bob, value: web3.utils.toWei("0.042", "ether")});
     const firstEncodedTraits = await instance.traitsOf(0);
     expect(buyResult.receipt.status).to.equal(true);
 
@@ -269,7 +308,7 @@ contract("CryptoPoops", async (accounts) => {
     expect(startSaleResult.receipt.status).to.equal(true);
 
     // Buy with boost
-    await expectRevert(instance.dropPoops(1, 1, {from: alice, value: web3.utils.toWei("0.02", "ether")}),
+    await expectRevert(instance.dropPoops(1, 1, {from: alice, value: web3.utils.toWei("0.042", "ether")}),
       "If you'd like a contract to be whitelisted for minting or boost, say hi in the Discord");
   });
   
@@ -299,7 +338,6 @@ contract("CryptoPoops", async (accounts) => {
 
   it("should incorporate a boost, if one is present", async () => {
     const cpInstance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
-    const traitsInstance = await testCryptoPoopTraits.new();
 
     // Set up sale such that we have access to all the trait IDs after
     const numCategories = 5;
@@ -338,6 +376,6 @@ contract("CryptoPoops", async (accounts) => {
     expect(lookupArray[0][numLevels-1]).to.deep.include(parseInt(spotCheckTrait));
   });
 
-  // TODO: Let a whitelisted mutater role change DNA??
+  // TODO: Let a whitelisted mutater role change DNA?
 
 });
