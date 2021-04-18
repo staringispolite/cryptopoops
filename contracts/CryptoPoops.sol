@@ -201,9 +201,10 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
     uint256 index;
     // Reserved for people who helped this project and giveaways
     for (index = 0; index < numCryptoPoops; index++) {
+      nextTokenId++;
       _safeMint(owner(), currentSupply + index);
 			_setTokenURI(currentSupply + index,
-        Strings.strConcat(Strings.uint2str(currentSupply + index), "/index.json"));
+      Strings.strConcat(Strings.uint2str(currentSupply + index), "/index.json"));
     }
   }
 

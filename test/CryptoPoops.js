@@ -124,6 +124,36 @@ contract("CryptoPoops", async (accounts) => {
       "Ownable: caller is not the owner -- Reason given: Ownable: caller is not the owner.");
   });
 
+  it("should allow users to buy after owner reserves giveaway NFTs", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+    await utils.setUpSale(instance, owner);
+
+    let txn = await instance.reserveGiveaway(3, {from: owner});
+    expect(txn.receipt.status).to.equal(true);
+
+    const NFTs = await instance.tokensOfOwner(owner);
+    expect(NFTs.length).to.equal(3);
+
+    // Set up sale
+    const startSaleResult = await instance.startSale({from: owner});
+    expect(startSaleResult.receipt.status).to.equal(true);
+
+    // Buy
+    const buyResult = await instance.dropPoops(1, 0,
+      {from: bob, value: web3.utils.toWei("0.042", "ether")});
+    expect(buyResult.receipt.status).to.equal(true);
+
+    // Confirm buy
+    let numPoops = await instance.totalSupply({from: bob});
+    expect(numPoops.toNumber()).to.equal(4);
+    const encodedTraits = await instance.traitsOf(3);
+    expectEvent(buyResult, "TraitAssigned", {
+      tokenOwner: bob, tokenId: new BN(3), encodedTraits: encodedTraits });
+
+    numPoops = await instance.totalSupply({from: bob});
+    expect(numPoops.toNumber()).to.equal(4);
+  });
+
   it("should allow owner to start sale", async () => {
     const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
 
