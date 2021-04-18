@@ -24,6 +24,17 @@ contract("CryptoPoops", async (accounts) => {
     console.log(await instance.calculateSelector());
   });
 
+  it("should correctly create tokenURIs", async () => {
+    const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
+
+    const txn = await instance.reserveGiveaway(1, {from: owner});
+    expect(txn.receipt.status).to.equal(true);
+
+    const tokenURI = await instance.tokenURI(0);
+    console.log("Spot check token URI:");
+    console.log(tokenURI);
+  });
+
   it("should report that it supports the ERC721 interfaces", async () => {
     const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
 
