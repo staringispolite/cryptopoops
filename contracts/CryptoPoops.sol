@@ -8,6 +8,7 @@ import "./access/Ownable.sol";
 import "./access/AccessControl.sol";
 import "./security/ReentrancyGuard.sol";
 import "./introspection/ERC165.sol";
+import "./utils/Strings.sol";
 
 import "./CryptoPoopTraits.sol"; 
 
@@ -16,6 +17,7 @@ import "./CryptoPoopTraits.sol";
 contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
   using SafeMath for uint8;
   using SafeMath for uint256;
+  using Strings for string;
 
   // Max NFTs total. Due to burning this won't be the max tokenId
   uint public constant MAX_POOPS = 6006;
@@ -124,7 +126,7 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
    */
   function _safeMintWithTraits(address _to, uint256 _mintId, uint8 _boost) internal {
     _safeMint(_to, _mintId);
-    _setTokenURI(_mintId, string(abi.encodePacked(_mintId, "/index.json")));
+    _setTokenURI(_mintId, Strings.strConcat(Strings.uint2str(_mintId), "/index.json"));
 
     uint64 encodedTraits = _assignTraits(_mintId, _boost);
     emit TraitAssigned(_to, _mintId, encodedTraits);
@@ -201,7 +203,7 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
     for (index = 0; index < numCryptoPoops; index++) {
       _safeMint(owner(), currentSupply + index);
 			_setTokenURI(currentSupply + index,
-        string(abi.encodePacked(currentSupply + index, "/index.json")));
+        Strings.strConcat(Strings.uint2str(currentSupply + index), "/index.json"));
     }
   }
 
@@ -234,8 +236,8 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
     require(payable(msg.sender).send(address(this).balance));
   }
 
-  // Calculate XOR of all function selectors
-  function calculateSelector() public pure returns (bytes4) {
-    return type(IAccessControl).interfaceId;
-  }  
+  // Handy while calculating XOR of all function selectors
+  //function calculateSelector() public pure returns (bytes4) {
+  //  return type(IAccessControl).interfaceId;
+  //}
 }
