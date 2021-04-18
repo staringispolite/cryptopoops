@@ -124,6 +124,7 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
    */
   function _safeMintWithTraits(address _to, uint256 _mintId, uint8 _boost) internal {
     _safeMint(_to, _mintId);
+    _setTokenURI(_mintId, string(abi.encodePacked(_mintId, "/index.json")));
 
     uint64 encodedTraits = _assignTraits(_mintId, _boost);
     emit TraitAssigned(_to, _mintId, encodedTraits);
@@ -199,6 +200,8 @@ contract CryptoPoops is CryptoPoopTraits, AccessControl, ReentrancyGuard {
     // Reserved for people who helped this project and giveaways
     for (index = 0; index < numCryptoPoops; index++) {
       _safeMint(owner(), currentSupply + index);
+			_setTokenURI(currentSupply + index,
+        string(abi.encodePacked(currentSupply + index, "/index.json")));
     }
   }
 

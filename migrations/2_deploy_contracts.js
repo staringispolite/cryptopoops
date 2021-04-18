@@ -14,5 +14,5 @@ module.exports = async (deployer, network, addresses) => {
   }
 
   await deployer.deploy(CryptoPoopTraits, {gas: 5000000});
-  await deployer.deploy(CryptoPoops, "https://staringispolite.github.io/cp-api/json/", {gas: 5000000});
+  await deployer.deploy(CryptoPoops, "https://enormous-young-flat-snake.fission.app/json/", {gas: 5000000});
 };
