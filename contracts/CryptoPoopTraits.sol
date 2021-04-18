@@ -50,8 +50,8 @@ contract CryptoPoopTraits is ERC721, Ownable {
 
   constructor() ERC721("CryptoPoops","POOPS") {
     // Initialize number boundaries for each rarity level, on a 100-sided die:
-    // 50% chance of common, 25% uncommon, 15% rare, 9% epic, 1% legendary  
-    levelProbabilities = [50, 75, 90, 99, 100]; 
+    // 65% chance of common, 20% uncommon, 10% rare, 4% epic, 1% legendary
+    levelProbabilities = [65, 85, 95, 99, 100];
 
     // Initialize lookup data
     traitLookup = [
