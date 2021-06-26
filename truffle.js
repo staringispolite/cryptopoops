@@ -1,3 +1,5 @@
+const Web3 = require("web3");
+const web3 = new Web3();
 const HDWalletProvider = require("truffle-hdwallet-provider");
 
 const MNEMONIC = process.env.MNEMONIC;
@@ -35,6 +37,7 @@ module.exports = {
         return new HDWalletProvider(MNEMONIC, rinkebyNodeUrl);
       },
       gas: 5000000,
+      gasPrice: web3.utils.toWei('120', 'gwei'),
       network_id: "4",
     },
     live: {
@@ -43,7 +46,7 @@ module.exports = {
         return new HDWalletProvider(MNEMONIC, mainnetNodeUrl);
       },
       gas: 5000000,
-      gasPrice: 5000000000,
+      gasPrice: web3.utils.toWei('100', 'gwei'),
     },
   },
   mocha: {
@@ -55,7 +58,7 @@ module.exports = {
   },
   compilers: {
     solc: {
-      version: "^0.7.6",
+      version: "^0.8.0",
       settings: {
         optimizer: {
           enabled: true,
