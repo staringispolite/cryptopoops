@@ -126,7 +126,7 @@ contract("CryptoPoops", async (accounts) => {
 
   it("should allow users to buy after owner reserves giveaway NFTs", async () => {
     const instance = await cryptoPoops.new("https://nftapi.com/cryptopoops/");
-    await utils.setUpSaleStaging(instance, owner);
+    await utils.setUpSale(instance, owner);
 
     let txn = await instance.reserveGiveaway(3, {from: owner});
     expect(txn.receipt.status).to.equal(true);

@@ -1,32 +1,28 @@
-# NFT-canonical: The starting ethereum codebase
+# cryptopoops
 
 ## Installation
 ```
 > git clone [etc]
-> cd ethereum
+> cd cryptopoops
 > yarn install
-> cp env.sample .env
 ```
-Fill in .env variables as applicable
 
 ## Testing
-Install Truffle and Ganache-CLI
-Run Ganache and run tests (settings in truffle.js), eg...
+Install Truffle and Ganache
+Run Ganache (settings in truffle.js)
 ``` 
-> ganache-cli -a 10 -p 7545
 > truffle test
 ```
 
 ## Staging deploy
 ```
 truffle deploy --network rinkeby
-truffle run verify EntryPointContractName --network rinkeby
-<post-constructor configuration as needed>
-<mint giveaway NFTs>
+truffle run verify CryptoPoops --network rinkeby
+<configure levels and traits>
+<get giveaways>
 <start sale>
 ```
-Note: This took 0.1495081 ETH at 20 GWei for CryptoPoops.
-If mainnet is at 120 Gwei, that would be 0.8971 ETH.
+Note: This took 0.1495081 ETH at 20 GWei.
+Mainnet will likely be 120 Gwei, or 0.8971 ETH.
 
-## Production deploy
-Same procedure as staging but with network set to `mainnet`
+
